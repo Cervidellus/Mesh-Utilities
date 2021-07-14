@@ -20,7 +20,9 @@
 #include <CGAL/property_map.h>
 
 #include <nlohmann/json.hpp>
+
 #include "CGAL_types.h"
+#include "CGAL_IO.h"
 
 //#include <CGAL/draw_surface_mesh.h>
 
@@ -28,7 +30,7 @@
 //#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 
-//using namespace CGAL_IO;
+using namespace CGAL_IO;
 using namespace std;
 namespace po = boost::program_options;
 int main(int argc, char* argv[])
@@ -56,12 +58,12 @@ int main(int argc, char* argv[])
     }
 
     //Load mesh
-    std::ifstream inputStream(vm["input"].as<string>());
     Mesh mesh;
-    std::string ply_comments;
-    bool file_read = CGAL::IO::read_PLY(inputStream, mesh, ply_comments);//Does not read a binary PLY file correctly? When reading a binary file, the flag std::ios::binary flag must be set during the creation of the ifstream
+    bool succeed = read_PLY(vm["input"].as<string>(), mesh);
+    std::ifstream inputStream(vm["input"].as<string>());
     cout << "vertices: " << mesh.number_of_vertices() << endl;
     cout << "faces: " << mesh.number_of_faces() << endl;
+
     //TEMP::just trying to figure out property maps.
     auto propertymaps = mesh.properties<vertex_descriptor>();
 

@@ -1,7 +1,42 @@
-//#include "CGAL_IO.h"
-//
-//#include <tinyply.h>
-//
+#include "CGAL_IO.h"
+
+#include <CGAL/Surface_mesh/IO/PLY.h>
+
+using namespace std;
+bool CGAL_IO::read_PLY(const std::string& filepath, Mesh& mesh)
+{
+    ifstream inputStream(filepath);
+    std::string ply_comments;
+    //check to see if it is binary.
+    string current_line;
+    getline(inputStream, current_line);
+    if (current_line != "ply")
+    {
+        cout << "Error reading file." << endl;
+        return false;
+    };
+    getline(inputStream, current_line);
+    if (current_line.find("binary") != std::string::npos) {
+        //close inputstream, open again as binary, read file.
+        inputStream.close();
+        inputStream.open(filepath, ios::binary);
+        if (CGAL::IO::read_PLY(inputStream, mesh, ply_comments)) return true;
+    }
+    else
+    {
+        //reset to beginning of file, and read.
+        inputStream.clear();
+        inputStream.seekg(0);
+        if (CGAL::IO::read_PLY(inputStream, mesh, ply_comments)) return true;
+    }
+    cout << "Error reading file." << endl;
+    return false;
+}
+
+
+// 
+// 
+// 
 //namespace CGAL_IO
 //{
 //    void write_polyhedron_ply(
