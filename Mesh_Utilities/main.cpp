@@ -1,22 +1,12 @@
 #define CGAL_EIGEN3_ENABLED
-//#define CGAL_USE_BASIC_VIEWER
-//#define QT_DISABLE_DEPRECATED_BEFORE = 4
-//Temporary notes:
-//I think what I need to read in the ply file is Polyhedron/polyhedron_prog_incr_builder.cpp
-//This is some good example code: https://unclejimbo.github.io/2017/06/14/Mesh-Processing-with-CGAL/
+//Code is derived primarily from CGAL surface_mesh_skeletonization examples
 
-//Code is coming primarily from CGAL surface_mesh_skeletonization examples
-
-//#include <CGAL/mesh_segmentation.h>
-//#include <tinyply.h>
 #include <string>
 #include <iostream>
 #include <boost/program_options.hpp>
-//#include <CGAL/boost/graph/IO/OFF.h>
-//#include <CGAL/boost/graph/IO/PLY.h>
-#include <CGAL/Surface_mesh/IO/PLY.h>
+#include <boost/filesystem.hpp>
+
 #include <CGAL/mesh_segmentation.h>
-#include <CGAL/Surface_mesh.h>
 #include <CGAL/property_map.h>
 
 #include <nlohmann/json.hpp>
@@ -24,23 +14,19 @@
 #include "CGAL_types.h"
 #include "CGAL_IO.h"
 
-//#include <CGAL/draw_surface_mesh.h>
-
-
-//#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-
 
 using namespace CGAL_IO;
 using namespace std;
 namespace po = boost::program_options;
+
 int main(int argc, char* argv[])
 {
     //options
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Help screen")
-        ("input,i", po::value<std::string>()->default_value("E:/OneDrive/Dokumente/Mesh-Utilities/monkey3.ply"), "Input file. Currently supports .off format.")
-        ("output,o", po::value<std::string>()->default_value("E:/OneDrive/Dokumente/Mesh-Utilities/output.ply"), "Directory for output files. Currently outputs to ply format")
+        ("source,s", po::value<std::string>()->default_value("E:/OneDrive/Dokumente/Mesh-Utilities/monkey3.ply"), "Source file. Currently supports .off format.")
+        ("destination,d", po::value<std::string>()->default_value("output"), "Directory for output files. Currently outputs to ply format")
         ("max_angle", po::value<double>(), "During the local remeshing step, a triangle will be split if it has an angle larger than max_angle.")
         ("min_edge_length", po::value<double>(), "During the local remeshing step, an edge will be collapse if it is length is less than min_edge_length")
         ("quality_tradeoff", po::value<double>(), "Quality speed tradeoff. Controls the velocity of movement and approximation quality: decreasing this value makes the mean curvature flow based contraction converge faster, but results in a skeleton of lower quality.")
@@ -57,15 +43,26 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    boost::filesystem::path source{ vm["source"].as<string>() };
+    boost::filesystem::path destination{ vm["destination"].as<string>() };
+
+    if (!boost::filesystem::exists(source.string())) {
+        cout << "Source file does:" << source.string() << " does not exist!" << endl;
+        return 1;
+    }
+
+    if (!boost::filesystem::exists(destination))
+    {
+        cout << "Creating destination directory:" << destination.string() << endl;
+        boost::filesystem::create_directory(vm["destination"].as<string>());
+    }
+
     //Load mesh
     Mesh mesh;
-    bool succeed = read_PLY(vm["input"].as<string>(), mesh);
-    std::ifstream inputStream(vm["input"].as<string>());
+    read_PLY(vm["source"].as<string>(), mesh);
+    std::ifstream inputStream(vm["source"].as<string>());
     cout << "vertices: " << mesh.number_of_vertices() << endl;
     cout << "faces: " << mesh.number_of_faces() << endl;
-
-    //TEMP::just trying to figure out property maps.
-    auto propertymaps = mesh.properties<vertex_descriptor>();
 
     if (!CGAL::is_triangle_mesh(mesh))
     {
@@ -170,24 +167,21 @@ int main(int argc, char* argv[])
     //but then I have to get into type erasure and I don't want to do that right now. 
 
     //Can also pass the property maps.. look at PLY.h to see how to pass.
-    std::filebuf outfile_buffer;
-    outfile_buffer.open(vm["output"].as<string>(), std::ios::out);
-    std::ostream outstream(&outfile_buffer);
-    CGAL::IO::write_PLY(outstream, mesh);
+
+
+    //Write mesh to file
+    boost::filesystem::path outputMeshFilePath(destination);
+    outputMeshFilePath.append(source.stem().string() + "_mesh.ply");
+    CGAL_IO::write_PLY(outputMeshFilePath.string(), mesh);
+
+    //Write skeleton to file
+    boost::filesystem::path outputSkeletonFilePath(destination);
+    Mesh skelmesh = CGAL_IO::skel_to_mesh(skeleton);
+    outputSkeletonFilePath.append(source.stem().string() + "_skeleton.ply");
     
-    //Write skeleton
-
-
-
-
-    //Output files. Need to fix so that it removes the suffix of input, and then adds... 
-    /*write_skeleton_ply(skeleton, vm["output"].as<string>() + "_skel.ply", false);
-
-    write_polyhedron_ply(tmesh,
-        vm["output"].as<string>() + "_mesh.ply",
-        sdf_values,
-        segment_ids,
-        false);*/
+    skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:weight");//required to force writing of edges. Would also work once I color.
+    //To read, change v0 in header to vertex1, and v1 to vertex2
+    CGAL_IO::write_PLY(outputSkeletonFilePath.string(), skelmesh, false);
 
     //write the clustering and sdf values to json
 
@@ -220,19 +214,13 @@ int main(int argc, char* argv[])
 
 //Up Next:
 
-//Get binary file reading working
-//Get a better use of paths to specify the output file path.  Look at my other code to figure out how. 
 // Write skeleton to file.
 // 
+//Color the skeleton vertices according to face SDF values, and edges according to source vertex.
 //Color the faces according to the SDF values. 
 
-//Write the maps to the PLY file. I'll have to find some other way to read them. I might also separately write them to text. 
 
 //Have it so that it can accept a list. 
-
-
-
-
 
 
 //TODO:: try again with old code it see if it loads the file...
