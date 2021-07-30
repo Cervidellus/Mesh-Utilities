@@ -3,16 +3,17 @@
 
 #include <string>
 #include <iostream>
+
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
-
 #include <CGAL/mesh_segmentation.h>
 #include <CGAL/property_map.h>
-
+#include <CGAL/IO/Color.h>
 #include <nlohmann/json.hpp>
 
 #include "CGAL_types.h"
 #include "CGAL_IO.h"
+#include "tinycolormap.hpp"
 
 
 using namespace CGAL_IO;
@@ -32,6 +33,8 @@ int main(int argc, char* argv[])
         ("quality_tradeoff", po::value<double>(), "Quality speed tradeoff. Controls the velocity of movement and approximation quality: decreasing this value makes the mean curvature flow based contraction converge faster, but results in a skeleton of lower quality.")
         ("medially_centered", po::value<bool>()->default_value(true), "If true, the meso - skeleton placement will be attracted by an approximation of the medial axis of the mesh during the contraction steps, so will be the result skeleton.")
         ("medial_tradeoff", po::value<double>(), "Controls the smoothness of the medial approximation: increasing this value results in a (less smooth) skeleton closer to the medial axis, as well as a lower convergence speed. It is only used if medially_centered==true.")
+        ("face_color_sdf, fsf", "Color mesh faces according to sdf values.")
+        ("face_color_segment, fst", "Color mesh faces according to segmentation values. Overrides vertex_color_sdf.")
         ;
 
     po::variables_map vm;
@@ -93,9 +96,6 @@ int main(int argc, char* argv[])
     skeletonization.convert_to_skeleton(skeleton);
     std::cout << "Number of vertices of the skeleton: " << boost::num_vertices(skeleton) << "\n";
     std::cout << "Number of edges of the skeleton: " << boost::num_edges(skeleton) << "\n";
-
-    // init the polyhedron simplex indices. Maybe you don't need for surface mesh?
-    //CGAL::set_halfedgeds_items_id(mesh);
     
     //for each input vertex compute its distance to the skeleton point it collapsed to.
     std::vector<double> distances(mesh.number_of_vertices());
@@ -116,8 +116,8 @@ int main(int argc, char* argv[])
     Facet_with_id_pmap<double> sdf_property_map(sdf_values);
     
     // compute sdf values with skeleton. Takes the average distance for each of the 3 vertices in a face. 
-    //This is a shape distance function, and with a centerline function it should be the same as a shape diameter function. 
-    //libigl has a proper sdf algorithm 
+    //This is a shape distance function, and with a centerline function it should be similar to a shape diameter function. 
+    //libigl has a proper sdf algorithm. I believe CGAL does also: https://doc.cgal.org/latest/Surface_mesh_segmentation/group__PkgSurfaceMeshSegmentationRef.html#ga8a429857a748922d0e8460619db69764
     for (face_descriptor f : faces(mesh))
     {
         double dist = 0;
@@ -142,31 +142,43 @@ int main(int argc, char* argv[])
         //}
     }
 
-    // post-process the sdf values. Filters them and normalizes them to between 0 and 1. Maybe we don't want them normalized?
+    // post-process the sdf values. Filters them and normalizes them to between 0 and 1. 
     CGAL::sdf_values_postprocessing(mesh, sdf_property_map);
 
     // create a property-map for segment-ids (it is an adaptor for this case)
     std::vector<std::size_t> segment_ids(mesh.number_of_faces());
     Facet_with_id_pmap<std::size_t> segment_property_map(segment_ids);
 
-    // segment the mesh using default parameters
+    // segment the mesh using default parameters. There are many paramaters that can be changed here.
     std::cout << "Number of segments: "
         << CGAL::segmentation_from_sdf_values(mesh, sdf_property_map, segment_property_map) << "\n";
 
-    //TODO:: color faces according to segment_property_map or sdf_property_map
 
 
 
-    //outputs that need to be written to the mesh file:
-    // polyhedron tmesh
-    //sdf_property_map
-    //segment_property_map which is the resulting segmentation. 
-    //I probably also want to output a map od the correspondance between surface points and the skeleton vertices?
+    
 
-    //maybe pass as a facet property map vector or map of a name and a vector
-    //but then I have to get into type erasure and I don't want to do that right now. 
+    //Color mesh faces according to segment_property_map or sdf_property_map 
+    if (vm.count("face_color_sdf") && !vm.count("face_color_segment"))
+    {
+        Mesh::Property_map<Mesh::Face_index, CGAL::Color> face_colors = mesh.property_map<Mesh::Face_index, CGAL::Color >("f:color").first;
+        for (face_descriptor f : faces(mesh))
+        {
+            tinycolormap::Color c = tinycolormap::GetColor(sdf_property_map[f]);
+            face_colors[f].set_rgb(c.r()*255, c.g()*255, c.b()*255);
+        }
+    }
 
-    //Can also pass the property maps.. look at PLY.h to see how to pass.
+
+    //Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> vcolors = mesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;
+
+
+
+
+
+
+
+
 
 
     //Write mesh to file
@@ -184,32 +196,16 @@ int main(int argc, char* argv[])
     CGAL_IO::write_PLY(outputSkeletonFilePath.string(), skelmesh, false);
 
     //write the clustering and sdf values to json
-
     nlohmann::json j;
-
     j["sdf"] = sdf_values;
     j["segments"] = segment_ids;
+    boost::filesystem::path outputResultsFilePath(destination);
+    outputResultsFilePath.append(source.stem().string() + "_results.json");
+    std::ofstream jsonStream(outputResultsFilePath.string());
+    jsonStream << std::setw(4) << j << std::endl;
+    jsonStream.close();
 
-    std::ofstream o("E:/OneDrive/Dokumente/Mesh-Utilities//results.json");
-    o << std::setw(4) << j << std::endl;
-    o.close();
-
-    ////// Output all the edges of the skeleton.
-    ////std::ofstream output("skel-poly.cgal");
-    ////Display_polylines display(skeleton, output);
-    ////CGAL::split_graph_into_polylines(skeleton, display);
-    ////output.close();
-
-
-    ////// Output skeleton points and the corresponding surface points
-    ////output.open("correspondance-poly.cgal");
-    ////for (Skeleton_vertex v : CGAL::make_range(vertices(skeleton)))
-    ////    for (vertex_descriptor vd : skeleton[v].vertices)
-    ////        output << "2 " << skeleton[v].point << " "
-    ////        << get(CGAL::vertex_point, tmesh, vd) << "\n";
-
-
-    //return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 //Up Next:

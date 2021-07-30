@@ -51,22 +51,22 @@ bool CGAL_IO::write_PLY(const std::string& filepath, Mesh& mesh, bool binary)
     return true;
 }
 
-bool CGAL_IO::write_PLY(const std::string& filepath, Skeleton& skeleton, bool binary)
-{
-    std::string unused_comment = "NO COMMENT!";
-    if (binary) {
-        
-        /*os, sm, unused_comment, parameters::all_default()*/
-        ofstream outputStream(filepath, ios::binary);
-        //CGAL::IO::write_PLY(outputStream, skeleton, unused_comment, CGAL::parameters::all_default());
-    }
-    else
-    {
-        ofstream outputStream(filepath);
-        //CGAL::IO::write_PLY(outputStream, skeleton);
-    }
-    return true;
-}
+//bool CGAL_IO::write_PLY(const std::string& filepath, Skeleton& skeleton, bool binary)
+//{
+//    std::string unused_comment = "NO COMMENT!";
+//    if (binary) {
+//        
+//        /*os, sm, unused_comment, parameters::all_default()*/
+//        ofstream outputStream(filepath, ios::binary);
+//        //CGAL::IO::write_PLY(outputStream, skeleton, unused_comment, CGAL::parameters::all_default());
+//    }
+//    else
+//    {
+//        ofstream outputStream(filepath);
+//        //CGAL::IO::write_PLY(outputStream, skeleton);
+//    }
+//    return true;
+//}
 
 Mesh CGAL_IO::skel_to_mesh(const Skeleton& skeleton)
 {

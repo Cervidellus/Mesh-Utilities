@@ -8,7 +8,7 @@ namespace CGAL_IO
     //void read_off(const std::string& filepath);
     bool read_PLY(const std::string& filepath, Mesh& mesh);
     bool write_PLY(const std::string& filepath, Mesh& mesh, bool binary = true);
-    bool write_PLY(const std::string& filepath, Skeleton& skeleton, bool binary = true);
+    //bool write_PLY(const std::string& filepath, Skeleton& skeleton, bool binary = true);
 
     Mesh skel_to_mesh(const Skeleton& skeleton);
 
