@@ -19,6 +19,8 @@ typedef Skeleton::vertex_descriptor                                             
 typedef Skeleton::edge_descriptor                                                   Skeleton_edge;
 typedef Skeleton::edge_iterator                                                     Skeleton_edge_iterator;
 
+typedef std::map<face_descriptor, double> Facet_double_map;
+
 // Property map associating a facet with an integer as id to an
 // element in a vector stored internally
 template<class ValueType>

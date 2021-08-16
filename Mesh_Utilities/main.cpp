@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <chrono>
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -26,7 +27,7 @@ int main(int argc, char* argv[])
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Help screen")
-        ("source,s", po::value<std::string>()->default_value("E:/OneDrive/Dokumente/Mesh-Utilities/monkey3.ply"), "Source file. Currently supports .off format.")
+        ("source,s", po::value<std::string>()->default_value("E:/OneDrive/Dokumente/Mesh-Utilities/864691136023902009_decimated.ply"), "Source file. Currently supports .off format.")
         ("destination,d", po::value<std::string>()->default_value("output"), "Directory for output files. Currently outputs to ply format")
         ("max_angle", po::value<double>(), "During the local remeshing step, a triangle will be split if it has an angle larger than max_angle.")
         ("min_edge_length", po::value<double>(), "During the local remeshing step, an edge will be collapse if it is length is less than min_edge_length")
@@ -74,6 +75,7 @@ int main(int argc, char* argv[])
     }
 
     //generate skeleton
+    auto start = std::chrono::high_resolution_clock::now();
     Skeleton skeleton;
     Skeletonization skeletonization(mesh);
     if (vm.count("max_angle")) {
@@ -97,89 +99,130 @@ int main(int argc, char* argv[])
     std::cout << "Number of vertices of the skeleton: " << boost::num_vertices(skeleton) << "\n";
     std::cout << "Number of edges of the skeleton: " << boost::num_edges(skeleton) << "\n";
     
-    //for each input vertex compute its distance to the skeleton point it collapsed to.
-    std::vector<double> distances(mesh.number_of_vertices());
-    for (Skeleton_vertex v : CGAL::make_range(vertices(skeleton)))
-    {
-        cout << "Skeleton index:" << v << endl;
-        const Point& skel_pt = skeleton[v].point;
-        for (vertex_descriptor mesh_v : skeleton[v].vertices)
-        {
-            cout << "Mesh index:" << mesh_v.idx() << endl;
-            const Point& mesh_pt = mesh.point(mesh_v);
-            distances[mesh_v.idx()] = std::sqrt(CGAL::squared_distance(skel_pt, mesh_pt));
-            cout << distances[mesh_v.idx()] << endl;
-        }
-    }
-    // create a property-map for sdf values
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> skeletonization_elapsed = finish - start;
+
+
+
+
+
+
+    //Calculate shape diameter function values
     std::vector<double> sdf_values(num_faces(mesh));
     Facet_with_id_pmap<double> sdf_property_map(sdf_values);
-    
-    // compute sdf values with skeleton. Takes the average distance for each of the 3 vertices in a face. 
-    //This is a shape distance function, and with a centerline function it should be similar to a shape diameter function. 
-    //libigl has a proper sdf algorithm. I believe CGAL does also: https://doc.cgal.org/latest/Surface_mesh_segmentation/group__PkgSurfaceMeshSegmentationRef.html#ga8a429857a748922d0e8460619db69764
-    for (face_descriptor f : faces(mesh))
-    {
-        double dist = 0;
 
-        for (halfedge_descriptor hd : halfedges_around_face(halfedge(f, mesh), mesh))//I think I need a different circulator for surface mesh?
-            dist += distances[target(hd, mesh).idx()];
-        sdf_property_map[f] = dist / 3.;
-
-        //May Need to change to one of hte two ways... 
-        //{
-        //    std::cout << "vertices around face " << f << std::endl;
-        //    CGAL::Vertex_around_face_iterator<Mesh> vbegin, vend;
-        //    for (boost::tie(vbegin, vend) = vertices_around_face(m.halfedge(f), m);
-        //        vbegin != vend;
-        //        ++vbegin) {
-        //        std::cout << *vbegin << std::endl;
-        //    }
-        //}
-        //// or the same again, but directly with a range based loop
-        //for (vertex_descriptor vd : vertices_around_face(m.halfedge(f), m)) {
-        //    std::cout << vd << std::endl;
-        //}
-    }
-
-    // post-process the sdf values. Filters them and normalizes them to between 0 and 1. 
+    //Facet_double_map internal_sdf_map;
+    //boost::associative_property_map<Facet_double_map> sdf_property_map(internal_sdf_map);
+    CGAL::sdf_values(mesh, sdf_property_map);
     CGAL::sdf_values_postprocessing(mesh, sdf_property_map);
 
-    // create a property-map for segment-ids (it is an adaptor for this case)
-    std::vector<std::size_t> segment_ids(mesh.number_of_faces());
-    Facet_with_id_pmap<std::size_t> segment_property_map(segment_ids);
+
+
+
+
+
+
+
+    ////for each input vertex compute its distance to the skeleton point it collapsed to.
+    //std::vector<double> skeleton_vertex_distances(mesh.number_of_vertices());
+    //double max_skeleton_vertex_distance = 0.0;
+    //std::vector<double> mean_mesh_vertex_distance(skeleton.vertex_set().size());//for coloring vertices 
+    //cout << skeleton.vertex_set().size();
+    //cout << skeleton.m_vertices.size();
+    //for (Skeleton_vertex v : CGAL::make_range(vertices(skeleton)))
+    //{
+    //    double totaldistance = 0.0;
+    //    const Point& skel_pt = skeleton[v].point;
+    //    for (vertex_descriptor mesh_v : skeleton[v].vertices)
+    //    {
+    //        const Point& mesh_pt = mesh.point(mesh_v);
+    //        double vdistance = std::sqrt(CGAL::squared_distance(skel_pt, mesh_pt));
+    //        skeleton_vertex_distances[mesh_v.idx()] = vdistance;
+    //        if (vdistance > max_skeleton_vertex_distance) max_skeleton_vertex_distance = vdistance;
+    //        totaldistance += vdistance;
+    //    }
+    //    mean_mesh_vertex_distance[v] = totaldistance / skeleton[v].vertices.size();
+    //}
+
+    ////TODO:Change this to shape diamater function, rather than a distance function.. https://doc.cgal.org/latest/Surface_mesh_segmentation/Surface_mesh_segmentation_2segmentation_from_sdf_values_SM_example_8cpp-example.html
+    //// compute sdf values with skeleton. Takes the average distance for each of the 3 vertices in a face. 
+    ////This is a shape distance function, and with a centerline function it should be similar to a shape diameter function. 
+    ////libigl has a proper sdf algorithm. I believe CGAL does also: https://doc.cgal.org/latest/Surface_mesh_segmentation/group__PkgSurfaceMeshSegmentationRef.html#ga8a429857a748922d0e8460619db69764
+    //std::vector<double> skeleton_face_distances(num_faces(mesh));
+    //Facet_with_id_pmap<double> skeleton_face_distance_property_map(skeleton_face_distances);
+    //for (face_descriptor f : faces(mesh))
+    //{
+    //    double dist = 0;
+
+    //    for (halfedge_descriptor hd : halfedges_around_face(halfedge(f, mesh), mesh))
+            //dist += skeleton_vertex_distances[target(hd, mesh).idx()];
+    //    skeleton_face_distance_property_map[f] = dist / 3.;
+    //}
+    //CGAL::sdf_values_postprocessing(mesh, skeleton_face_distance_property_map);
 
     // segment the mesh using default parameters. There are many paramaters that can be changed here.
+    std::vector<std::size_t> segment_ids(mesh.number_of_faces());
+    Facet_with_id_pmap<std::size_t> segment_property_map(segment_ids);
     std::cout << "Number of segments: "
         << CGAL::segmentation_from_sdf_values(mesh, sdf_property_map, segment_property_map) << "\n";
 
-
-
-
-    
-
-    //Color mesh faces according to segment_property_map or sdf_property_map 
-    if (vm.count("face_color_sdf") && !vm.count("face_color_segment"))
+    //Color vertices according to SDF. 
+    //Iterate over faces to poll color of each vertex.
+    //Iterate over vertices and average colors assigned to that vertex.
+    Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> vertex_colors = mesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;
+    Mesh::Property_map<Mesh::Face_index, CGAL::Color> face_colors = mesh.property_map<Mesh::Face_index, CGAL::Color>("f:color").first;
+    std::vector<std::vector<CGAL::Color>> temp_vertex_colors(mesh.number_of_vertices());
+    for (face_descriptor f : faces(mesh))
     {
-        Mesh::Property_map<Mesh::Face_index, CGAL::Color> face_colors = mesh.property_map<Mesh::Face_index, CGAL::Color >("f:color").first;
-        for (face_descriptor f : faces(mesh))
+        tinycolormap::Color c = tinycolormap::GetColor(sdf_property_map[f]);
+        CGAL::Color face_color(c.r()*255, c.g()*255, c.b()*255);
+        face_colors[f] = face_color;
+        for (halfedge_descriptor hd : halfedges_around_face(halfedge(f, mesh), mesh))
         {
-            tinycolormap::Color c = tinycolormap::GetColor(sdf_property_map[f]);
-            face_colors[f].set_rgb(c.r()*255, c.g()*255, c.b()*255);
+            temp_vertex_colors[target(hd,mesh).idx()].push_back(face_color);
         }
     }
+    for (vertex_descriptor v : vertices(mesh))
+    {
+        //average the colors from temp_vertex_colors
+        int count = temp_vertex_colors[v.idx()].size();
+        double r = 0;
+        double g = 0;
+        double b = 0;
+        
+        //iterate over temp_vertex_colors[v.idx()] and add values to r g and b. 
+        for (CGAL::Color color : temp_vertex_colors[v.idx()])
+        {
+            r += color.red();
+            g += color.green();
+            b += color.blue();
+        }
+        vertex_colors[v].set_rgb(r/count, g/count, b/count);
+    }
+
+ 
+
+    ////Color vertices according to skeleton distance(depracated)
+    //Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> vertex_colors = mesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;
+    //for (vertex_descriptor v : vertices(mesh))
+    //{
+    //    tinycolormap::Color c = tinycolormap::GetColor(skeleton_vertex_distances[v]/max_skeleton_vertex_distance);
+    //    vertex_colors[v].set_rgb(c.r()*255, c.g()*255, c.b()*255);
+    //}
+
+    //convert skeleton to a mesh and color vertices
+    Mesh skelmesh = CGAL_IO::skel_to_mesh(skeleton);
+    skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:unused");//required to force writing of edges. Would also work if I color edges.
+    Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> skel_vertex_colors = (skelmesh.add_property_map<Mesh::Vertex_index, CGAL::Color>("v:color")).first;
 
 
-    //Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> vcolors = mesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;
-
-
-
-
-
-
-
-
-
+    //Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> skel_vertex_colors = skelmesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;//size is null.. should be 833?
+    //for (vertex_descriptor v : vertices(skelmesh))
+    //{
+    //    //TODO::Color vertex according to mean sdf value of associated faces. 
+    //    tinycolormap::Color c = tinycolormap::GetColor(mean_mesh_vertex_distance[v] / max_skeleton_vertex_distance);
+    //    skel_vertex_colors[v].set_rgb(c.r() * 255, c.g() * 255, c.b() * 255);
+    //}
 
     //Write mesh to file
     boost::filesystem::path outputMeshFilePath(destination);
@@ -188,16 +231,15 @@ int main(int argc, char* argv[])
 
     //Write skeleton to file
     boost::filesystem::path outputSkeletonFilePath(destination);
-    Mesh skelmesh = CGAL_IO::skel_to_mesh(skeleton);
     outputSkeletonFilePath.append(source.stem().string() + "_skeleton.ply");
-    
-    skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:weight");//required to force writing of edges. Would also work once I color.
-    //To read, change v0 in header to vertex1, and v1 to vertex2
+    //To read, change v0 in header to vertex1, and v1 to vertex2. Will be fixed in later versions of cgal.
     CGAL_IO::write_PLY(outputSkeletonFilePath.string(), skelmesh, false);
 
     //write the clustering and sdf values to json
     nlohmann::json j;
-    j["sdf"] = sdf_values;
+    j["skeletonization_time"] = skeletonization_elapsed.count();
+    j["shape_diameter_function"] = sdf_values;
+    //j["sdf"] = skeleton_face_distances;
     j["segments"] = segment_ids;
     boost::filesystem::path outputResultsFilePath(destination);
     outputResultsFilePath.append(source.stem().string() + "_results.json");
@@ -210,13 +252,21 @@ int main(int argc, char* argv[])
 
 //Up Next:
 
-// Write skeleton to file.
+//Color skeleton according to the sdf of associated faces.
+
+//Maybe save a second mesh that has the segmentation? 
 // 
-//Color the skeleton vertices according to face SDF values, and edges according to source vertex.
-//Color the faces according to the SDF values. 
+//Have it so that it can accept a list of meshes to process.
 
 
-//Have it so that it can accept a list. 
+//optimize parameters for preserving spines. skeleton quality
+// 
+//Color the faces according to the segmentation. 
+
+//add "fur" to skeleton by making a mesh with lines pointing between skeleton vertex and mesh vertex.
+
+
+
 
 
 //TODO:: try again with old code it see if it loads the file...
