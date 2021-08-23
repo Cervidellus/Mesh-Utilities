@@ -74,38 +74,6 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    //Calculate shape diameter function values and segmentation, save meshes
-    std::vector<double> sdf_values(num_faces(mesh));
-    if (vm.count("sdf_mesh") || vm.count("segmented_mesh"))
-    {
-        Facet_with_id_pmap<double> sdf_property_map(sdf_values);
-        CGAL::sdf_values(mesh, sdf_property_map);
-        CGAL::sdf_values_postprocessing(mesh, sdf_property_map);
-
-        if (vm.count("sdf_mesh"))
-        {
-            CGAL_IO::color_verts_from_face_property(mesh, sdf_property_map);
-            boost::filesystem::path outputMeshFilePath(destination);
-            outputMeshFilePath.append(source.stem().string() + "_sdf_mesh.ply");
-            CGAL_IO::write_PLY(outputMeshFilePath.string(), mesh);
-        }
-        if (vm.count("segmented_mesh"))
-        {
-            // segment the mesh using default parameters. There are many paramaters that can be changed here.
-            std::vector<double> segment_ids(mesh.number_of_faces());
-            Facet_with_id_pmap<double> segment_property_map(segment_ids);
-
-            std::cout << "Number of segments: "
-                << CGAL::segmentation_from_sdf_values(mesh, sdf_property_map, segment_property_map) << "\n";
-            CGAL::sdf_values_postprocessing(mesh, segment_property_map);
-            CGAL_IO::color_verts_from_face_property(mesh, segment_property_map, tinycolormap::ColormapType::Jet);
-            boost::filesystem::path outputMeshFilePath(destination);
-            outputMeshFilePath.append(source.stem().string() + "_seg_mesh.ply");
-            CGAL_IO::write_PLY(outputMeshFilePath.string(), mesh);
-        }
-    }
-
-
     //generate skeleton
     auto start = std::chrono::high_resolution_clock::now();
     Skeleton skeleton;
@@ -130,16 +98,16 @@ int main(int argc, char* argv[])
     skeletonization.convert_to_skeleton(skeleton);
     std::cout << "Number of vertices of the skeleton: " << boost::num_vertices(skeleton) << "\n";
     std::cout << "Number of edges of the skeleton: " << boost::num_edges(skeleton) << "\n";
-    
+
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> skeletonization_elapsed = finish - start;
 
-    //convert skeleton to a mesh and color vertices
-    Mesh skelmesh = CGAL_IO::skel_to_mesh(skeleton);
-    skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:unused");//required to force writing of edges. Would also work if I color edges.
-    Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> skel_vertex_colors = (skelmesh.add_property_map<Mesh::Vertex_index, CGAL::Color>("v:color")).first;
-
-
+    //convert skeleton to a mesh
+    
+    //Mesh skelmesh = CGAL_IO::skel_to_mesh(skeleton);
+    //skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:unused");//required to force writing of edges. Would also work if I color edges.
+    //Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> skel_vertex_colors = (skelmesh.add_property_map<Mesh::Vertex_index, CGAL::Color>("v:color")).first;
+    
     //Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> skel_vertex_colors = skelmesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;//size is null.. should be 833?
     //for (vertex_descriptor v : vertices(skelmesh))
     //{
@@ -147,6 +115,46 @@ int main(int argc, char* argv[])
     //    tinycolormap::Color c = tinycolormap::GetColor(mean_mesh_vertex_distance[v] / max_skeleton_vertex_distance);
     //    skel_vertex_colors[v].set_rgb(c.r() * 255, c.g() * 255, c.b() * 255);
     //}
+
+    //Calculate shape diameter function values and segmentation, save meshes
+    std::vector<double> sdf_values(num_faces(mesh));
+    if (vm.count("sdf_mesh") || vm.count("segmented_mesh"))
+    {
+        Facet_with_id_pmap<double> sdf_property_map(sdf_values);
+        CGAL::sdf_values(mesh, sdf_property_map);
+        CGAL::sdf_values_postprocessing(mesh, sdf_property_map);
+
+        if (vm.count("sdf_mesh"))
+        {
+            //mesh
+            CGAL_IO::color_verts_from_face_property(mesh, sdf_property_map);
+            boost::filesystem::path outputMeshFilePath(destination);
+            outputMeshFilePath.append(source.stem().string() + "_sdf_mesh.ply");
+            CGAL_IO::write_PLY(outputMeshFilePath.string(), mesh);
+
+            //skeleton
+
+        }
+        if (vm.count("segmented_mesh"))
+        {
+            // segment the mesh using default parameters. There are many paramaters that can be changed here.
+            std::vector<double> segment_ids(mesh.number_of_faces());
+            Facet_with_id_pmap<double> segment_property_map(segment_ids);
+
+            std::cout << "Number of segments: "
+                << CGAL::segmentation_from_sdf_values(mesh, sdf_property_map, segment_property_map) << "\n";
+            CGAL::sdf_values_postprocessing(mesh, segment_property_map);
+            CGAL_IO::color_verts_from_face_property(mesh, segment_property_map, tinycolormap::ColormapType::Jet);
+            boost::filesystem::path outputMeshFilePath(destination);
+            outputMeshFilePath.append(source.stem().string() + "_seg_mesh.ply");
+            CGAL_IO::write_PLY(outputMeshFilePath.string(), mesh);
+        }
+    }
+    Mesh skelmesh = CGAL_IO::color_skel_to_mesh(skeleton, mesh);
+
+
+
+
 
 
 
@@ -173,7 +181,7 @@ int main(int argc, char* argv[])
 
 //Up Next:
 
-//Maybe save a second mesh that has the segmentation? 
+//Color skeleton vertices according to face values. color_skeletonmesh_from_mesh should take a skeleton_mesh in addition to skeleton.
 // 
 //Have it so that it can accept a list of meshes to process.
 

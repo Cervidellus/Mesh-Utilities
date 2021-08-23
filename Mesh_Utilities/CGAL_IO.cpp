@@ -64,6 +64,53 @@ Mesh CGAL_IO::skel_to_mesh(const Skeleton& skeleton)
     return mesh;
 }
 
+Mesh CGAL_IO::color_skel_to_mesh(Skeleton& skeleton, Mesh& mesh)
+{
+    Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> mesh_vertex_colors = mesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;
+    Mesh skelmesh;
+    Mesh::Property_map<Mesh::Edge_index, CGAL::Color> skel_edge_colors = (skelmesh.add_property_map<Mesh::edge_index, CGAL::Color>("e:color")).first;
+    Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> skelmesh_vertex_colors = (skelmesh.add_property_map<Mesh::Vertex_index, CGAL::Color>("v:color")).first;
+    for (const Skeleton_vertex sv : CGAL::make_range(vertices(skeleton)))
+    {
+        int vertex_index = skelmesh.add_vertex(skeleton[sv].point);
+        cout << vertex_index << endl;
+        auto skelmesh_vcolor_iterator = skelmesh_vertex_colors.end();
+        skelmesh_vcolor_iterator--;
+
+        //now iterate over the vertices and average the colors
+        int count = skeleton[sv].vertices.size();
+        int r = 0;
+        int g = 0;
+        int b = 0;
+        if (count > 0)
+        {
+            for (vertex_descriptor mv : skeleton[sv].vertices)
+            {
+                r += mesh_vertex_colors[mv].r();
+                g += mesh_vertex_colors[mv].g();
+                b += mesh_vertex_colors[mv].b();
+            }
+            cout << r / count << " " << g / count << " " << b / count << endl;
+            skelmesh_vcolor_iterator->set_rgb(r / count, g / count, b / count);
+        }
+        //else
+        //{
+        //    //(skelmesh_vertex_colors.end()--)->set_rgb(0, 0, 0);
+        //}
+    }
+    for (const Skeleton_edge e : CGAL::make_range(edges(skeleton)))
+    {
+        skelmesh.add_edge(Mesh::vertex_index(source(e, skeleton)), Mesh::vertex_index(target(e, skeleton)));
+        //get the color of the source vertex
+        int sourceindex = Mesh::vertex_index(source(e, skeleton));
+        CGAL::Color c = skelmesh_vertex_colors[Mesh::vertex_index(source(e, skeleton))];
+        auto skel_edge_color_iterator = skel_edge_colors.end();
+        skel_edge_color_iterator--;
+        skel_edge_color_iterator->set_rgb(c.r(), c.g(), c.b());
+    }
+    return skelmesh;
+}
+
 bool CGAL_IO::color_verts_from_face_property(Mesh& mesh, const Facet_with_id_pmap<double>& face_map, ColormapType colormap)
 {
     Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> vertex_colors = mesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;
