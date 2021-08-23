@@ -68,12 +68,14 @@ Mesh CGAL_IO::color_skel_to_mesh(Skeleton& skeleton, Mesh& mesh)
 {
     Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> mesh_vertex_colors = mesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;
     Mesh skelmesh;
-    Mesh::Property_map<Mesh::Edge_index, CGAL::Color> skel_edge_colors = (skelmesh.add_property_map<Mesh::edge_index, CGAL::Color>("e:color")).first;
+    //Mesh::Property_map<Mesh::Edge_index, CGAL::Color> skel_edge_colors = (skelmesh.add_property_map<Mesh::edge_index, CGAL::Color>("e:color")).first;
+    Mesh::Property_map<Mesh::Edge_index, boost::int64_t> skel_edge_red = (skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:red")).first;
+    Mesh::Property_map<Mesh::Edge_index, boost::int64_t> skel_edge_green = (skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:green")).first;
+    Mesh::Property_map<Mesh::Edge_index, boost::int64_t> skel_edge_blue = (skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:blue")).first;
     Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> skelmesh_vertex_colors = (skelmesh.add_property_map<Mesh::Vertex_index, CGAL::Color>("v:color")).first;
     for (const Skeleton_vertex sv : CGAL::make_range(vertices(skeleton)))
     {
         int vertex_index = skelmesh.add_vertex(skeleton[sv].point);
-        cout << vertex_index << endl;
         auto skelmesh_vcolor_iterator = skelmesh_vertex_colors.end();
         skelmesh_vcolor_iterator--;
 
@@ -90,23 +92,30 @@ Mesh CGAL_IO::color_skel_to_mesh(Skeleton& skeleton, Mesh& mesh)
                 g += mesh_vertex_colors[mv].g();
                 b += mesh_vertex_colors[mv].b();
             }
-            cout << r / count << " " << g / count << " " << b / count << endl;
             skelmesh_vcolor_iterator->set_rgb(r / count, g / count, b / count);
         }
-        //else
-        //{
-        //    //(skelmesh_vertex_colors.end()--)->set_rgb(0, 0, 0);
-        //}
     }
     for (const Skeleton_edge e : CGAL::make_range(edges(skeleton)))
     {
+        //todo:: NEED TO WRITE TO 3 SEPARATE COLOR CHANNELS.. 
         skelmesh.add_edge(Mesh::vertex_index(source(e, skeleton)), Mesh::vertex_index(target(e, skeleton)));
         //get the color of the source vertex
         int sourceindex = Mesh::vertex_index(source(e, skeleton));
         CGAL::Color c = skelmesh_vertex_colors[Mesh::vertex_index(source(e, skeleton))];
-        auto skel_edge_color_iterator = skel_edge_colors.end();
-        skel_edge_color_iterator--;
-        skel_edge_color_iterator->set_rgb(c.r(), c.g(), c.b());
+        auto red_iterator = skel_edge_red.end();
+        auto green_iterator = skel_edge_green.end();
+        auto blue_iterator = skel_edge_blue.end();
+        red_iterator--;
+        green_iterator--;
+        blue_iterator--;
+        cout << *red_iterator << endl;
+        *red_iterator = c.r();
+        cout << *red_iterator << endl;
+        *green_iterator = c.g();
+        *blue_iterator = c.b();
+        //auto skel_edge_color_iterator = skel_edge_colors.end();
+        //skel_edge_color_iterator--;
+        //skel_edge_color_iterator->set_rgb(c.r(), c.g(), c.b());
     }
     return skelmesh;
 }

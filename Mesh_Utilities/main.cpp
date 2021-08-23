@@ -60,6 +60,11 @@ int main(int argc, char* argv[])
         cout << "Creating destination directory:" << destination.string() << endl;
         boost::filesystem::create_directory(vm["destination"].as<string>());
     }
+    //set up timing
+    std::chrono::steady_clock::time_point start;
+    std::chrono::duration<double> skeletonization_elapsed(0.0);
+    std::chrono::duration<double> sdf_elapsed(0.0);
+    std::chrono::duration<double> segment_elapsed(0.0);
 
     //Load mesh
     Mesh mesh;
@@ -75,7 +80,7 @@ int main(int argc, char* argv[])
     }
 
     //generate skeleton
-    auto start = std::chrono::high_resolution_clock::now();
+   start = std::chrono::high_resolution_clock::now();
     Skeleton skeleton;
     Skeletonization skeletonization(mesh);
     if (vm.count("max_angle")) {
@@ -98,26 +103,11 @@ int main(int argc, char* argv[])
     skeletonization.convert_to_skeleton(skeleton);
     std::cout << "Number of vertices of the skeleton: " << boost::num_vertices(skeleton) << "\n";
     std::cout << "Number of edges of the skeleton: " << boost::num_edges(skeleton) << "\n";
+    skeletonization_elapsed = std::chrono::high_resolution_clock::now() - start;
 
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> skeletonization_elapsed = finish - start;
-
-    //convert skeleton to a mesh
-    
-    //Mesh skelmesh = CGAL_IO::skel_to_mesh(skeleton);
-    //skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:unused");//required to force writing of edges. Would also work if I color edges.
-    //Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> skel_vertex_colors = (skelmesh.add_property_map<Mesh::Vertex_index, CGAL::Color>("v:color")).first;
-    
-    //Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> skel_vertex_colors = skelmesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;//size is null.. should be 833?
-    //for (vertex_descriptor v : vertices(skelmesh))
-    //{
-    //    //TODO::Color vertex according to mean sdf value of associated faces. 
-    //    tinycolormap::Color c = tinycolormap::GetColor(mean_mesh_vertex_distance[v] / max_skeleton_vertex_distance);
-    //    skel_vertex_colors[v].set_rgb(c.r() * 255, c.g() * 255, c.b() * 255);
-    //}
-
-    //Calculate shape diameter function values and segmentation, save meshes
+    //sdf and segmentation
     std::vector<double> sdf_values(num_faces(mesh));
+    std::vector<double> segment_ids(num_faces(mesh));
     if (vm.count("sdf_mesh") || vm.count("segmented_mesh"))
     {
         Facet_with_id_pmap<double> sdf_property_map(sdf_values);
@@ -126,6 +116,7 @@ int main(int argc, char* argv[])
 
         if (vm.count("sdf_mesh"))
         {
+            start = std::chrono::high_resolution_clock::now();
             //mesh
             CGAL_IO::color_verts_from_face_property(mesh, sdf_property_map);
             boost::filesystem::path outputMeshFilePath(destination);
@@ -133,12 +124,18 @@ int main(int argc, char* argv[])
             CGAL_IO::write_PLY(outputMeshFilePath.string(), mesh);
 
             //skeleton
+            Mesh skelmesh = CGAL_IO::color_skel_to_mesh(skeleton, mesh);
+            skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:unused");//required to force writing of edges. Would also work if I color edges.
 
+            boost::filesystem::path outputSkeletonFilePath(destination);
+            outputSkeletonFilePath.append(source.stem().string() + "_sdf_skeleton.ply");
+            CGAL_IO::write_PLY(outputSkeletonFilePath.string(), skelmesh);
+            sdf_elapsed = std::chrono::high_resolution_clock::now() - start;
         }
         if (vm.count("segmented_mesh"))
         {
+            start = std::chrono::high_resolution_clock::now();
             // segment the mesh using default parameters. There are many paramaters that can be changed here.
-            std::vector<double> segment_ids(mesh.number_of_faces());
             Facet_with_id_pmap<double> segment_property_map(segment_ids);
 
             std::cout << "Number of segments: "
@@ -148,28 +145,30 @@ int main(int argc, char* argv[])
             boost::filesystem::path outputMeshFilePath(destination);
             outputMeshFilePath.append(source.stem().string() + "_seg_mesh.ply");
             CGAL_IO::write_PLY(outputMeshFilePath.string(), mesh);
+
+            Mesh skelmesh = CGAL_IO::color_skel_to_mesh(skeleton, mesh);
+            boost::filesystem::path outputSkeletonFilePath(destination);
+            outputSkeletonFilePath.append(source.stem().string() + "_seg_skeleton.ply");
+            CGAL_IO::write_PLY(outputSkeletonFilePath.string(), skelmesh);
+            segment_elapsed = std::chrono::high_resolution_clock::now() - start;
         }
     }
-    Mesh skelmesh = CGAL_IO::color_skel_to_mesh(skeleton, mesh);
-
-
-
-
-
-
-
-    //Write skeleton to file
-    boost::filesystem::path outputSkeletonFilePath(destination);
-    outputSkeletonFilePath.append(source.stem().string() + "_skeleton.ply");
-    //To read, change v0 in header to vertex1, and v1 to vertex2. Will be fixed in later versions of cgal.
-    CGAL_IO::write_PLY(outputSkeletonFilePath.string(), skelmesh, false);
 
     //write the clustering and sdf values to json
     nlohmann::json j;
-    j["skeletonization_time"] = skeletonization_elapsed.count();
-    j["shape_diameter_function"] = sdf_values;
-    //j["sdf"] = skeleton_face_distances;
-    //j["segments"] = segment_ids;
+ 
+    j["skeletonization_elapsed_seconds"] = skeletonization_elapsed.count();
+    if (vm.count("sdf_mesh"))
+    {
+        j["shape_diameter_function_elapsed_seconds"] = sdf_elapsed.count();
+        j["shape_diameter_function_values"] = sdf_values;
+    }
+    if (vm.count("segmented_mesh"))
+    {
+        j["shape_diameter_function_elapsed_seconds"] = segment_elapsed.count();
+        j["segmentation_ids"] = segment_ids;
+    }
+
     boost::filesystem::path outputResultsFilePath(destination);
     outputResultsFilePath.append(source.stem().string() + "_results.json");
     std::ofstream jsonStream(outputResultsFilePath.string());
@@ -179,9 +178,8 @@ int main(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 
-//Up Next:
-
-//Color skeleton vertices according to face values. color_skeletonmesh_from_mesh should take a skeleton_mesh in addition to skeleton.
+// 
+// Check that time is being logged correctly.
 // 
 //Have it so that it can accept a list of meshes to process.
 
