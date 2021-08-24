@@ -3,7 +3,6 @@
 #include <CGAL/boost/graph/Named_function_parameters.h>
 #include <CGAL/boost/graph/named_params_helper.h>
 
-
 using namespace std;
 bool CGAL_IO::read_PLY(const std::string& filepath, Mesh& mesh)
 {
@@ -18,14 +17,12 @@ bool CGAL_IO::read_PLY(const std::string& filepath, Mesh& mesh)
     };
     getline(inputStream, current_line);
     if (current_line.find("binary") != std::string::npos) {
-        //close inputstream, open again as binary, read file.
         inputStream.close();
         inputStream.open(filepath, ios::binary);
         if (CGAL::IO::read_PLY(inputStream, mesh, ply_comments)) return true;
     }
     else
     {
-        //reset to beginning of file, and read.
         inputStream.clear();
         inputStream.seekg(0);
         if (CGAL::IO::read_PLY(inputStream, mesh, ply_comments)) return true;
@@ -39,13 +36,11 @@ bool CGAL_IO::write_PLY(const std::string& filepath, const Mesh& mesh, bool bina
     if (binary) {
         ofstream outputStream(filepath, ios::binary);
         CGAL::IO::write_PLY(outputStream, mesh);
-        //CGAL::IO::write_OBJ(outputStream, mesh);
     }
     else
     {
         ofstream outputStream(filepath);
         CGAL::IO::write_PLY(outputStream, mesh);
-        //CGAL::IO::write_OBJ(outputStream, mesh);
     }
     return true;
 }
@@ -68,7 +63,6 @@ Mesh CGAL_IO::color_skel_to_mesh(Skeleton& skeleton, Mesh& mesh)
 {
     Mesh::Property_map<Mesh::Vertex_index, CGAL::Color> mesh_vertex_colors = mesh.property_map<Mesh::Vertex_index, CGAL::Color >("v:color").first;
     Mesh skelmesh;
-    //Mesh::Property_map<Mesh::Edge_index, CGAL::Color> skel_edge_colors = (skelmesh.add_property_map<Mesh::edge_index, CGAL::Color>("e:color")).first;
     Mesh::Property_map<Mesh::Edge_index, boost::int64_t> skel_edge_red = (skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:red")).first;
     Mesh::Property_map<Mesh::Edge_index, boost::int64_t> skel_edge_green = (skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:green")).first;
     Mesh::Property_map<Mesh::Edge_index, boost::int64_t> skel_edge_blue = (skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:blue")).first;
@@ -79,7 +73,6 @@ Mesh CGAL_IO::color_skel_to_mesh(Skeleton& skeleton, Mesh& mesh)
         auto skelmesh_vcolor_iterator = skelmesh_vertex_colors.end();
         skelmesh_vcolor_iterator--;
 
-        //now iterate over the vertices and average the colors
         int count = skeleton[sv].vertices.size();
         int r = 0;
         int g = 0;
@@ -97,9 +90,7 @@ Mesh CGAL_IO::color_skel_to_mesh(Skeleton& skeleton, Mesh& mesh)
     }
     for (const Skeleton_edge e : CGAL::make_range(edges(skeleton)))
     {
-        //todo:: NEED TO WRITE TO 3 SEPARATE COLOR CHANNELS.. 
         skelmesh.add_edge(Mesh::vertex_index(source(e, skeleton)), Mesh::vertex_index(target(e, skeleton)));
-        //get the color of the source vertex
         int sourceindex = Mesh::vertex_index(source(e, skeleton));
         CGAL::Color c = skelmesh_vertex_colors[Mesh::vertex_index(source(e, skeleton))];
         auto red_iterator = skel_edge_red.end();
@@ -108,14 +99,9 @@ Mesh CGAL_IO::color_skel_to_mesh(Skeleton& skeleton, Mesh& mesh)
         red_iterator--;
         green_iterator--;
         blue_iterator--;
-        cout << *red_iterator << endl;
         *red_iterator = c.r();
-        cout << *red_iterator << endl;
         *green_iterator = c.g();
         *blue_iterator = c.b();
-        //auto skel_edge_color_iterator = skel_edge_colors.end();
-        //skel_edge_color_iterator--;
-        //skel_edge_color_iterator->set_rgb(c.r(), c.g(), c.b());
     }
     return skelmesh;
 }

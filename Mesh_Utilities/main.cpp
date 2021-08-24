@@ -23,6 +23,10 @@ namespace po = boost::program_options;
 
 int main(int argc, char* argv[])
 {
+    std::vector<std::string> argument_log;
+    if (argc > 1) {
+        argument_log.assign(argv + 1, argv + argc);
+    }
     //options
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -41,7 +45,9 @@ int main(int argc, char* argv[])
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
-
+    
+    std::map<std::string, std::string> arguments_log;
+    
     if (vm.count("help")) {
         cout << desc << '\n';
         return 1;
@@ -154,9 +160,11 @@ int main(int argc, char* argv[])
         }
     }
 
-    //write the clustering and sdf values to json
+    //write values to json
     nlohmann::json j;
  
+    j["arguments"] = argument_log;
+
     j["skeletonization_elapsed_seconds"] = skeletonization_elapsed.count();
     if (vm.count("sdf_mesh"))
     {
@@ -177,24 +185,3 @@ int main(int argc, char* argv[])
 
     return EXIT_SUCCESS;
 }
-
-// 
-// Check that time is being logged correctly.
-// 
-//Have it so that it can accept a list of meshes to process.
-
-
-//optimize parameters for preserving spines. skeleton quality
-// 
-//Color the faces according to the segmentation. 
-
-//add "fur" to skeleton by making a mesh with lines pointing between skeleton vertex and mesh vertex.
-
-
-
-
-
-//TODO:: try again with old code it see if it loads the file...
-
-//Interesting:
-//https://stackoverflow.com/questions/52160757/cgal-hole-filling-with-color
