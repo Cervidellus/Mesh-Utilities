@@ -1,6 +1,6 @@
 #include "CGAL_IO.h"
 
-#include <CGAL/boost/graph/Named_function_parameters.h>
+//#include <CGAL/boost/graph/Named_function_parameters.h>
 #include <CGAL/boost/graph/named_params_helper.h>
 
 using namespace std;
