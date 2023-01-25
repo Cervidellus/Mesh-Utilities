@@ -1,20 +1,18 @@
-#ifndef CGAL_TYPES_FILE_HANDLING
-#define CGAL_TYPES_FILE_HANDLING
+#ifndef MESHUTILITIES_FILE_IO
+#define MESHUTILITIES_FILE_IO
 
 #include "CGAL_types.h"
 #include "tinycolormap.hpp"
 
 using namespace tinycolormap;
-namespace CGAL_IO
-{
-    //IO methods
-    bool read_PLY(const std::string& filepath, Mesh& mesh);
-    bool write_PLY(const std::string& filepath, const Mesh& mesh, const bool binary = true);
 
-    //helper methods
-    Mesh skel_to_mesh(const Skeleton& skeleton);
-    Mesh color_skel_to_mesh(Skeleton& skeleton, Mesh& mesh);
-    bool color_verts_from_face_property(Mesh& mesh, const Facet_with_id_pmap<double>& face_map, ColormapType colormap = ColormapType::Viridis);
+namespace meshutils {
+    namespace IO
+    {
+        //IO methods
+        bool read_PLY(const std::string& filepath, Mesh& mesh);
+        bool write_PLY(const std::string& filepath, const Mesh& mesh, const bool binary = true);
+    }
 }
 
 #endif

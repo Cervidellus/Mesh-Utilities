@@ -14,10 +14,11 @@
 
 #include "CGAL_types.h"
 #include "CGAL_IO.h"
+#include "mesh_utilities.h"
 #include "tinycolormap.hpp"
 
 
-using namespace CGAL_IO;
+//using namespace CGAL_IO;
 using namespace std;
 namespace po = boost::program_options;
 
@@ -74,7 +75,7 @@ int main(int argc, char* argv[])
 
     //Load mesh
     Mesh mesh;
-    read_PLY(vm["source"].as<string>(), mesh);
+    meshutils::IO::read_PLY(vm["source"].as<string>(), mesh);
     std::ifstream inputStream(vm["source"].as<string>());
     cout << "vertices: " << mesh.number_of_vertices() << endl;
     cout << "faces: " << mesh.number_of_faces() << endl;
@@ -119,23 +120,23 @@ int main(int argc, char* argv[])
         Facet_with_id_pmap<double> sdf_property_map(sdf_values);
         CGAL::sdf_values(mesh, sdf_property_map);
         CGAL::sdf_values_postprocessing(mesh, sdf_property_map);
-
+       
         if (vm.count("sdf_mesh"))
         {
             start = std::chrono::high_resolution_clock::now();
             //mesh
-            CGAL_IO::color_verts_from_face_property(mesh, sdf_property_map);
+            meshutils::color_verts_from_face_property(mesh, sdf_property_map);
             boost::filesystem::path outputMeshFilePath(destination);
             outputMeshFilePath.append(source.stem().string() + "_sdf_mesh.ply");
-            CGAL_IO::write_PLY(outputMeshFilePath.string(), mesh);
+            meshutils::IO::write_PLY(outputMeshFilePath.string(), mesh);
 
             //skeleton
-            Mesh skelmesh = CGAL_IO::color_skel_to_mesh(skeleton, mesh);
+            Mesh skelmesh = meshutils::color_skel_to_mesh(skeleton, mesh);
             skelmesh.add_property_map<Mesh::edge_index, boost::int64_t>("e:unused");//required to force writing of edges. Would also work if I color edges.
 
             boost::filesystem::path outputSkeletonFilePath(destination);
             outputSkeletonFilePath.append(source.stem().string() + "_sdf_skeleton.ply");
-            CGAL_IO::write_PLY(outputSkeletonFilePath.string(), skelmesh);
+            meshutils::IO::write_PLY(outputSkeletonFilePath.string(), skelmesh);
             sdf_elapsed = std::chrono::high_resolution_clock::now() - start;
         }
         if (vm.count("segmented_mesh"))
@@ -147,15 +148,15 @@ int main(int argc, char* argv[])
             std::cout << "Number of segments: "
                 << CGAL::segmentation_from_sdf_values(mesh, sdf_property_map, segment_property_map) << "\n";
             CGAL::sdf_values_postprocessing(mesh, segment_property_map);
-            CGAL_IO::color_verts_from_face_property(mesh, segment_property_map, tinycolormap::ColormapType::Jet);
+            meshutils::color_verts_from_face_property(mesh, segment_property_map, tinycolormap::ColormapType::Jet);
             boost::filesystem::path outputMeshFilePath(destination);
             outputMeshFilePath.append(source.stem().string() + "_seg_mesh.ply");
-            CGAL_IO::write_PLY(outputMeshFilePath.string(), mesh);
+            meshutils::IO::write_PLY(outputMeshFilePath.string(), mesh);
 
-            Mesh skelmesh = CGAL_IO::color_skel_to_mesh(skeleton, mesh);
+            Mesh skelmesh = meshutils::color_skel_to_mesh(skeleton, mesh);
             boost::filesystem::path outputSkeletonFilePath(destination);
             outputSkeletonFilePath.append(source.stem().string() + "_seg_skeleton.ply");
-            CGAL_IO::write_PLY(outputSkeletonFilePath.string(), skelmesh);
+            meshutils::IO::write_PLY(outputSkeletonFilePath.string(), skelmesh);
             segment_elapsed = std::chrono::high_resolution_clock::now() - start;
         }
     }

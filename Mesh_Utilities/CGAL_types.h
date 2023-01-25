@@ -1,5 +1,5 @@
-#ifndef MY_CGAL_TYPES
-#define MY_CGAL_TYPES
+#ifndef MESHUTILITIES_CGAL_TYPES
+#define MESHUTILITIES_CGAL_TYPES
 
 #include <CGAL/Surface_mesh/Surface_mesh.h>
 #include <CGAL/Surface_mesh_traits_generator_3.h>
