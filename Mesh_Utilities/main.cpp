@@ -12,11 +12,12 @@
 //#include <CGAL/IO/Color.h>
 //#include <nlohmann/json.hpp>
 
-//#include "mesh_IO.h"
+#include "mesh_IO.h"
 //#include "mesh_utilities.h"
 //#include "tinycolormap.hpp"
 
 #include "Mesh.h"
+//#include "mesh_types.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -71,12 +72,15 @@ int main(int argc, char* argv[])
     //std::chrono::duration<double> skeletonization_elapsed(0.0);
     //std::chrono::duration<double> sdf_elapsed(0.0);
     //std::chrono::duration<double> segment_elapsed(0.0);
+    std::shared_ptr<Point3Mesh> myMesh = make_shared<Point3Mesh>();
+    bool success = meshutils::IO::read("C:\\Users\\acrob\\OneDrive\\Dokumente\\Mesh-Utilities\\x64\\Release\\monkey.ply", myMesh);
+    //myMesh.fromPlyFile("C:\\Users\\acrob\\OneDrive\\Dokumente\\Mesh-Utilities\\x64\\Release\\monkey.ply");
 
-    Mesh myMesh;
+    if(success) std::cout << "Loaded mesh";
 
-    myMesh.fromPlyFile("C:\\Users\\acrob\\OneDrive\\Dokumente\\Mesh-Utilities\\x64\\Release\\monkey.ply");
-
-    std::cout << "Loaded mesh";
+    //how do I get the number of vertices?
+    std::cout << myMesh->number_of_vertices();
+    
 
    // //Load mesh
    // Point3Mesh mesh;
