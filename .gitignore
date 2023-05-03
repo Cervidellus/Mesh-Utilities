@@ -2,3 +2,15 @@ Mesh_Utilities/x64/
 Mesh_Utilities/Mesh_Utilities.vcxproj.user
 Mesh_Utilities/Mesh_Utilities.vcxproj.filters
 Mesh_Utilities/Mesh_Utilities.vcxproj
+*.off
+*.ply
+results.json
+.vs/
+x64/
+Mesh_Utilities/output/864691136023902009_decimated_results.json
+Mesh_Utilities/output/
+Mesh_Utilities/output_m0/864691136023902009_decimated_results.json
+Mesh_Utilities/output_m0_1/864691136023902009_decimated_results.json
+Mesh_Utilities/output_m1/864691136023902009_decimated_results.json
+Mesh_Utilities/output_m10/864691136023902009_decimated_results.json
+Mesh_Utilities/newMonkeyMesh.obj

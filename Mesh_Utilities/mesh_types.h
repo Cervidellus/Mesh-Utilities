@@ -9,15 +9,17 @@
 typedef CGAL::Simple_cartesian<double>                                              Kernel;
 typedef Kernel::Point_3                                                             Point;
 typedef CGAL::Surface_mesh <Point>                                                  Point3Mesh;
-typedef boost::graph_traits<Point3Mesh>::vertex_descriptor                                vertex_descriptor;
-typedef boost::graph_traits<Point3Mesh>::halfedge_descriptor                              halfedge_descriptor;
-typedef boost::graph_traits<Point3Mesh>::face_descriptor                                  face_descriptor;
+typedef boost::graph_traits<Point3Mesh>::vertex_descriptor                          vertex_descriptor;
+typedef boost::graph_traits<Point3Mesh>::halfedge_descriptor                        halfedge_descriptor;
+typedef boost::graph_traits<Point3Mesh>::face_descriptor                            face_descriptor;
 
-typedef CGAL::Mean_curvature_flow_skeletonization<Point3Mesh>                             Skeletonization;
-typedef Skeletonization::Skeleton                                                   Skeleton;
-typedef Skeleton::vertex_descriptor                                                 Skeleton_vertex;
-typedef Skeleton::edge_descriptor                                                   Skeleton_edge;
-typedef Skeleton::edge_iterator                                                     Skeleton_edge_iterator;
+typedef CGAL::Mean_curvature_flow_skeletonization<Point3Mesh>                       Skeletonization;
+typedef Skeletonization::Skeleton                                                   Mean_Curvature_Flow_Skeleton;
+typedef Mean_Curvature_Flow_Skeleton::vertex_descriptor                             Skeleton_vertex;
+typedef Mean_Curvature_Flow_Skeleton::edge_descriptor                               Skeleton_edge;
+typedef Mean_Curvature_Flow_Skeleton::edge_iterator                                 Skeleton_edge_iterator;
+typedef Mean_Curvature_Flow_Skeleton::vertex_iterator                               Skeleton_vertex_iterator; 
+
 
 typedef std::map<face_descriptor, double> Facet_double_map;
 

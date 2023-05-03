@@ -10,10 +10,12 @@ namespace meshutils {
     {
         //IO methods
         bool read(const std::string& filepath, std::shared_ptr<Point3Mesh> mesh);
+        bool write(std::shared_ptr<Point3Mesh> mesh, const std::string& filepath);
+
         //bool write(const std::string& filepath, std::shared_ptr<const Point3Mesh> mesh, const bool binary = true);
 
-        bool read_PLY(const std::string& filepath, std::shared_ptr<Point3Mesh> mesh);
-        bool write_PLY(const std::string& filepath, std::shared_ptr<const Point3Mesh> mesh, const bool binary = true);
+        //bool read_PLY(const std::string& filepath, std::shared_ptr<Point3Mesh> mesh);
+        //bool write_PLY(const std::string& filepath, std::shared_ptr<const Point3Mesh> mesh, const bool binary = true);
         //bool read_OBJ(const std::string& filepath, std::shared_ptr<Point3Mesh> mesh);
         //bool write_OBJ(const std::string& filepath, std::shared_ptr<const Point3Mesh> mesh, const bool binary = true);
         //bool read_OFF(const std::string& filepath, std::shared_ptr<Point3Mesh> mesh);

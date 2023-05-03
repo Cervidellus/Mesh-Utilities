@@ -5,7 +5,7 @@
 //The problem is, then I can't make it private... 
 //Maybe I should properly subclass the CGAL types so I can have this as a private method. 
 
-Point3Mesh meshutils::skel_to_mesh(const Skeleton& skeleton)
+Point3Mesh meshutils::skel_to_mesh(const Mean_Curvature_Flow_Skeleton& skeleton)
 {
     Point3Mesh mesh;
     for (const Skeleton_vertex v : CGAL::make_range(vertices(skeleton)))
@@ -20,7 +20,7 @@ Point3Mesh meshutils::skel_to_mesh(const Skeleton& skeleton)
 }
 
 //Here I am passing in a mesh and returning a mesh. I think I should pass in a mesh and return an error. 
-Point3Mesh meshutils::color_skel_to_mesh(Skeleton& skeleton, Point3Mesh& mesh)
+Point3Mesh meshutils::color_skel_to_mesh(Mean_Curvature_Flow_Skeleton& skeleton, Point3Mesh& mesh)
 {
     Point3Mesh::Property_map<Point3Mesh::Vertex_index, CGAL::Color> mesh_vertex_colors = mesh.property_map<Point3Mesh::Vertex_index, CGAL::Color >("v:color").first;
     Point3Mesh skelmesh;

@@ -21,9 +21,9 @@ void tesfunction() {
 PYBIND11_MODULE(meshutils, m) {
     py::class_<Mesh>(m, "Mesh")
         .def(py::init<>())
-        .def("printInt", &Mesh::testPrint, "junk")//works?
-        .def("fromPlyFile", &Mesh::fromPlyFile, "read a mesh from a .ply file")
-        .def("toPlyFile", &Mesh::toPlyFile, "write a mesh to a .ply file");
+        .def("printInt", &Mesh::testPrint, "junk");//works?
+        //.def("fromPlyFile", &Mesh::fromPlyFile, "read a mesh from a .ply file")
+        //.def("toPlyFile", &Mesh::toPlyFile, "write a mesh to a .ply file");
 }
 
 #endif

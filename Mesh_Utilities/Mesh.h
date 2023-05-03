@@ -20,8 +20,8 @@ public:
 	//what else?
 
 	//IO
-	void fromPlyFile(std::string fileName);
-	void toPlyFile(std::string fileName, bool binary = true);
+	//void fromPlyFile(std::string fileName);
+	//void toPlyFile(std::string fileName, bool binary = true);
 
 	//Skeletonization
 	//For this I will want it to return a skeleton object. It will store as a memeber shared pointer. If it does not exist, it will create it. 
@@ -30,7 +30,7 @@ public:
 
 private:
 	std::shared_ptr<Point3Mesh> mesh_ = nullptr;
-	std::shared_ptr<Skeleton> skeleton_ = nullptr;
+	std::shared_ptr<Mean_Curvature_Flow_Skeleton> skeleton_ = nullptr;
 };
 #endif
 

@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     bool success = meshutils::IO::read("C:\\Users\\acrob\\OneDrive\\Dokumente\\Mesh-Utilities\\x64\\Release\\monkey.ply", myMesh);
     //myMesh.fromPlyFile("C:\\Users\\acrob\\OneDrive\\Dokumente\\Mesh-Utilities\\x64\\Release\\monkey.ply");
 
-    if(success) std::cout << "Loaded mesh";
+    if(success) std::cout << "Loaded mesh" << "\n";
 
     //how do I get the number of vertices?
     std::cout << myMesh->number_of_vertices();
@@ -97,28 +97,37 @@ int main(int argc, char* argv[])
 
    // //generate skeleton
    //start = std::chrono::high_resolution_clock::now();
-   // Skeleton skeleton;
-   // Skeletonization skeletonization(mesh);
-   // if (vm.count("max_angle")) {
-   //     skeletonization.set_max_triangle_angle(vm["max_angle"].as<double>());
-   // }
-   // if (vm.count("min_edge_length")) {
-   //     skeletonization.set_min_edge_length(vm["min_edge_length"].as<double>());
-   // }
-   // if (vm.count("quality_tradeoff")) {
-   //     skeletonization.set_quality_speed_tradeoff(vm["quality_tradeoff"].as<double>());
-   // }
-   // if (vm.count("medially_centered")) {
-   //     skeletonization.set_is_medially_centered(vm["medially_centered"].as<bool>());
-   // }
-   // if (vm.count("medial_tradeoff")) {
-   //     skeletonization.set_medially_centered_speed_tradeoff(vm["medial_tradeoff"].as<double>());
-   // }
+    Mean_Curvature_Flow_Skeleton skeleton;
+    Skeletonization skeletonization(*myMesh);
+    //if (vm.count("max_angle")) {
+    //    skeletonization.set_max_triangle_angle(vm["max_angle"].as<double>());
+    //}
+    //if (vm.count("min_edge_length")) {
+    //    skeletonization.set_min_edge_length(vm["min_edge_length"].as<double>());
+    //}
+    //if (vm.count("quality_tradeoff")) {
+    //    skeletonization.set_quality_speed_tradeoff(vm["quality_tradeoff"].as<double>());
+    //}
+    //if (vm.count("medially_centered")) {
+    //    skeletonization.set_is_medially_centered(vm["medially_centered"].as<bool>());
+    //}
+    //if (vm.count("medial_tradeoff")) {
+    //    skeletonization.set_medially_centered_speed_tradeoff(vm["medial_tradeoff"].as<double>());
+    //}
 
-   // skeletonization.contract_until_convergence();
-   // skeletonization.convert_to_skeleton(skeleton);
-   // std::cout << "Number of vertices of the skeleton: " << boost::num_vertices(skeleton) << "\n";
-   // std::cout << "Number of edges of the skeleton: " << boost::num_edges(skeleton) << "\n";
+    skeletonization.contract_until_convergence();
+    skeletonization.convert_to_skeleton(skeleton);
+    std::cout << "Number of vertices of the skeleton: " << boost::num_vertices(skeleton) << "\n";
+    std::cout << "Number of edges of the skeleton: " << boost::num_edges(skeleton) << "\n";
+    auto verts = boost::vertices(skeleton);
+    auto edges = boost::edges(skeleton);
+    std::cout << typeid(verts).name() << "\n";
+    std::cout << typeid(edges).name();
+
+    meshutils::IO::write(myMesh, "newMonkeyMesh.obj");
+
+
+    //CGAL::make_range(vertices(skeleton))
    // skeletonization_elapsed = std::chrono::high_resolution_clock::now() - start;
 
    // //sdf and segmentation
