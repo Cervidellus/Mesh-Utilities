@@ -8,6 +8,8 @@ class Mesh
 {
 public:
 	Mesh();
+	//add a constructor overload that takes a filepath
+
 	void testPrint(int i);//just to test the python interface
 
 	//Properties

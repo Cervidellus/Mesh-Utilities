@@ -45,4 +45,5 @@ struct Facet_with_id_pmap
 private:
     std::vector<ValueType>& internal_vector;
 };
+
 #endif

@@ -11,9 +11,10 @@
 //#include <CGAL/property_map.h>
 //#include <CGAL/IO/Color.h>
 //#include <nlohmann/json.hpp>
+#include <CGAL/subdivision_method_3.h>
 
 #include "mesh_IO.h"
-//#include "mesh_utilities.h"
+#include "mesh_utilities.h"
 //#include "tinycolormap.hpp"
 
 #include "Mesh.h"
@@ -72,14 +73,45 @@ int main(int argc, char* argv[])
     //std::chrono::duration<double> skeletonization_elapsed(0.0);
     //std::chrono::duration<double> sdf_elapsed(0.0);
     //std::chrono::duration<double> segment_elapsed(0.0);
-    std::shared_ptr<Point3Mesh> myMesh = make_shared<Point3Mesh>();
-    bool success = meshutils::IO::read("C:\\Users\\acrob\\OneDrive\\Dokumente\\Mesh-Utilities\\x64\\Release\\monkey.ply", myMesh);
+    //std::shared_ptr<Point3Mesh> myMesh = make_shared<Point3Mesh>();
+    //bool success = meshutils::IO::read("C:\\Users\\acrob\\OneDrive\\Dokumente\\Mesh-Utilities\\x64\\Release\\monkey.ply", myMesh);
     //myMesh.fromPlyFile("C:\\Users\\acrob\\OneDrive\\Dokumente\\Mesh-Utilities\\x64\\Release\\monkey.ply");
 
-    if(success) std::cout << "Loaded mesh" << "\n";
+    //if(success) std::cout << "Loaded mesh" << "\n";
+
+    Point center(0, 0, 0);
+    //Point3Mesh myMesh = meshutils::icosphere(5, 2, center);
+
+    std::shared_ptr<Point3Mesh> myMesh = std::make_shared<Point3Mesh>(meshutils::primitives::icosphere(5, 4, center));
+
+    //for (vertex_descriptor vd : myMesh->vertices())
+    //{
+    //    std::cout << "vertex:" << myMesh->point(vd) << " squared distance from center: " << CGAL::squared_distance(center, myMesh->point(vd)) << "\n";//returns about half of what it should? 
+    //}
+
+    //Point3Mesh icos;
+    //CGAL::make_icosahedron(icos, center, 5);
+
+    //meshutils::IO::write(std::make_shared<Point3Mesh>(icos), "make_icosahedron5.obj");
+
+    //CGAL::Subdivision_method_3::Loop_subdivision<Point3Mesh>(icos, CGAL::parameters::number_of_iterations(1));
+
+    //meshutils::IO::write(std::make_shared<Point3Mesh>(icos), "Loop_subdivision_1_subs_5.obj");
+
+
+
+    //for (vertex_descriptor vd : icos.vertices()) {
+    //    //this gives correct squared distance of 25
+    //    std::cout << "icos without subdivision:\n";
+    //    std::cout << "vertex:" << icos.point(vd) << " squared distance from center: " << CGAL::squared_distance(center, icos.point(vd)) << "\n"; 
+    //}
 
     //how do I get the number of vertices?
-    std::cout << myMesh->number_of_vertices();
+    //std::cout << myMesh->number_of_vertices();
+
+    meshutils::IO::write(myMesh, "icosahedronSphereMesh5.obj");
+    
+
     
 
    // //Load mesh
@@ -97,8 +129,8 @@ int main(int argc, char* argv[])
 
    // //generate skeleton
    //start = std::chrono::high_resolution_clock::now();
-    Mean_Curvature_Flow_Skeleton skeleton;
-    Skeletonization skeletonization(*myMesh);
+    //Mean_Curvature_Flow_Skeleton skeleton;
+    //Skeletonization skeletonization(*myMesh);
     //if (vm.count("max_angle")) {
     //    skeletonization.set_max_triangle_angle(vm["max_angle"].as<double>());
     //}
@@ -115,16 +147,16 @@ int main(int argc, char* argv[])
     //    skeletonization.set_medially_centered_speed_tradeoff(vm["medial_tradeoff"].as<double>());
     //}
 
-    skeletonization.contract_until_convergence();
-    skeletonization.convert_to_skeleton(skeleton);
-    std::cout << "Number of vertices of the skeleton: " << boost::num_vertices(skeleton) << "\n";
-    std::cout << "Number of edges of the skeleton: " << boost::num_edges(skeleton) << "\n";
-    auto verts = boost::vertices(skeleton);
-    auto edges = boost::edges(skeleton);
-    std::cout << typeid(verts).name() << "\n";
-    std::cout << typeid(edges).name();
+    //skeletonization.contract_until_convergence();
+    //skeletonization.convert_to_skeleton(skeleton);
+    //std::cout << "Number of vertices of the skeleton: " << boost::num_vertices(skeleton) << "\n";
+    //std::cout << "Number of edges of the skeleton: " << boost::num_edges(skeleton) << "\n";
+    //auto verts = boost::vertices(skeleton);
+    //auto edges = boost::edges(skeleton);
+    //std::cout << typeid(verts).name() << "\n";
+    //std::cout << typeid(edges).name();
 
-    meshutils::IO::write(myMesh, "newMonkeyMesh.obj");
+    //meshutils::IO::write(myMesh, "newMonkeyMesh.obj");
 
 
     //CGAL::make_range(vertices(skeleton))

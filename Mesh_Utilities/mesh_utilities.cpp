@@ -1,9 +1,23 @@
 #include "mesh_utilities.h"
+#include "subdivision_masks.h"
 
-//Converts a skeleton object to a mesh object. Do I need this? Can I just support IO of the skeleton types?
-//Should I just have a separate skeletonIO namespace? Or should I have this in IO, overload the read/write with a skeleton version that calls this?
-//The problem is, then I can't make it private... 
-//Maybe I should properly subclass the CGAL types so I can have this as a private method. 
+#include <CGAL/boost/graph/generators.h>
+#include <CGAL/subdivision_method_3.h>
+#include <CGAL/Subdivision_method_3/subdivision_masks_3.h>
+
+Point3Mesh meshutils::primitives::icosphere(double radius, int subdivisions, Point center)
+{
+    Point3Mesh sphere_mesh;
+    CGAL::make_icosahedron(sphere_mesh, center, radius);
+    Spherical_Loop_mask mask(sphere_mesh, center, radius);
+    CGAL::Subdivision_method_3::PTQ(sphere_mesh, mask, subdivisions);
+
+    return sphere_mesh;
+}
+
+void meshutils::subdivision::loop_subdivision(Point3Mesh& mesh, int subdivisions) {
+    CGAL::Subdivision_method_3::Loop_subdivision(mesh, CGAL::parameters::number_of_iterations(subdivisions));
+}
 
 Point3Mesh meshutils::skel_to_mesh(const Mean_Curvature_Flow_Skeleton& skeleton)
 {

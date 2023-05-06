@@ -51,12 +51,7 @@ bool meshutils::IO::write(std::shared_ptr<Point3Mesh> mesh, const std::string& f
         return false;
     }
 
-    std::cout << filePath.parent_path() << "\n";
-
     if (filePath.parent_path() == "") filePath = std::filesystem::current_path() /= filepath;
-    //"C:\\Users\\acrob\\OneDrive\\Dokumente\\Mesh-Utilities\\Mesh_Utilities\\newMonkeyMesh.obj"
-
-    std::cout << filePath.parent_path();
 
     if (!std::filesystem::exists(filePath.parent_path())) {
         std::cout << "Invalid output directory.\n";
@@ -64,50 +59,5 @@ bool meshutils::IO::write(std::shared_ptr<Point3Mesh> mesh, const std::string& f
     }
 
     //write
-    bool success = CGAL::IO::write_polygon_mesh(filepath, *mesh);
-
-    return success;
+    return CGAL::IO::write_polygon_mesh(filepath, *mesh);
 }
-
-
-//
-//bool meshutils::IO::read_PLY(const std::string& filepath, std::shared_ptr<Point3Mesh> mesh)
-//{
-//    ifstream inputStream(filepath);
-//    std::string ply_comments;
-//    string current_line;
-//    getline(inputStream, current_line);
-//    if (current_line != "ply")
-//    {
-//        cout << "Error reading file." << endl;
-//        return false;
-//    };
-//    getline(inputStream, current_line);
-//    if (current_line.find("binary") != std::string::npos) {
-//        inputStream.close();
-//        inputStream.open(filepath, ios::binary);
-//        if (CGAL::IO::read_PLY(inputStream, *mesh, ply_comments)) return true;
-//    }
-//    else
-//    {
-//        inputStream.clear();
-//        inputStream.seekg(0);
-//        if (CGAL::IO::read_PLY(inputStream, *mesh, ply_comments)) return true;
-//    }
-//    cout << "Error reading file." << endl;
-//    return false;
-//}
-//
-//bool meshutils::IO::write_PLY(const std::string& filepath, std::shared_ptr<const Point3Mesh> mesh, bool binary)
-//{
-//    if (binary) {
-//        ofstream outputStream(filepath, ios::binary);
-//        CGAL::IO::write_PLY(outputStream, *mesh);
-//    }
-//    else
-//    {
-//        ofstream outputStream(filepath);
-//        CGAL::IO::write_PLY(outputStream, *mesh);
-//    }
-//    return true;
-//}
