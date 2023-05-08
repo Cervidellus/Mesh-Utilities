@@ -8,7 +8,10 @@ using namespace tinycolormap;
 
 namespace meshutils {
 	namespace primitives {
-		Point3Mesh icosphere(double radius, int subdivisions, Point center);
+		Point3Mesh icosphere(const double radius, const int subdivisions, const Point center);
+		//circle
+		
+		Point3Mesh circle(const Point center, const double radius, const int num_vertices);
 		//cylinder
 	}
 
@@ -16,9 +19,6 @@ namespace meshutils {
 		void loop_subdivision(Point3Mesh& mesh, int subdivisions);
 	}
 	
-
-	
-
 	//helper methods
 	Point3Mesh skel_to_mesh(const Mean_Curvature_Flow_Skeleton& skeleton);//this is going to change
 	//coloring

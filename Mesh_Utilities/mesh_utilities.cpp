@@ -1,11 +1,13 @@
 #include "mesh_utilities.h"
 #include "subdivision_masks.h"
 
+#include <numbers>
+
 #include <CGAL/boost/graph/generators.h>
 #include <CGAL/subdivision_method_3.h>
 #include <CGAL/Subdivision_method_3/subdivision_masks_3.h>
 
-Point3Mesh meshutils::primitives::icosphere(double radius, int subdivisions, Point center)
+Point3Mesh meshutils::primitives::icosphere(const double radius, const int subdivisions, const Point center)
 {
     Point3Mesh sphere_mesh;
     CGAL::make_icosahedron(sphere_mesh, center, radius);
@@ -13,6 +15,38 @@ Point3Mesh meshutils::primitives::icosphere(double radius, int subdivisions, Poi
     CGAL::Subdivision_method_3::PTQ(sphere_mesh, mask, subdivisions);
 
     return sphere_mesh;
+}
+
+Point3Mesh meshutils::primitives::circle(const Point center, const double radius, const int num_vertices)//should I add an axis?
+{
+    //Produces a triangular circle mesh  on the XY plane centered around a Point 'center', with edge vertices 'num_vertices'
+
+    Point3Mesh circle;
+    double angleStep = 2.0f * std::numbers::pi / num_vertices;
+    circle.add_vertex(center);
+
+    //add edge verts
+    for (int i = 0; i < num_vertices; i++) {
+        double angle = i * angleStep;
+        double x = radius * cos(angle) + center[0];
+        double y = radius * sin(angle) + center[1];
+        circle.add_vertex(Point(x, y, center[2]));
+    }
+
+    circle.point(CGAL::SM_Vertex_index(0));
+    vertex_descriptor center_vd(0);
+    for (vertex_descriptor vd : circle.vertices()) {
+        if (vd.idx() != 0) {
+            //First point makes a face with the last point. 
+            if (vd.idx() == 1) {
+                circle.add_face(center_vd, vertex_descriptor(num_vertices), vd);
+            }
+            else {
+                circle.add_face(center_vd, vertex_descriptor(vd-1), vd);
+            }
+        }
+    }
+    return circle;
 }
 
 void meshutils::subdivision::loop_subdivision(Point3Mesh& mesh, int subdivisions) {

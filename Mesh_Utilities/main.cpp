@@ -23,6 +23,15 @@
 using namespace std;
 namespace po = boost::program_options;
 
+//next steps: 
+//cylinder primitive
+    //https://github.com/CGAL/cgal/issues/2618
+    // https://doc.cgal.org/latest/Kernel_23/classCGAL_1_1Circle__3.html
+//Skeleton to mesh by making balls and cylinders, and using a boolean operation to stick them together. 
+
+//Passing a skeleton in python to a skeleton here
+//passing back the stick and ball meshes back to python
+
 int main(int argc, char* argv[])
 {
     //std::vector<std::string> argument_log;
@@ -82,8 +91,11 @@ int main(int argc, char* argv[])
     Point center(0, 0, 0);
     //Point3Mesh myMesh = meshutils::icosphere(5, 2, center);
 
-    std::shared_ptr<Point3Mesh> myMesh = std::make_shared<Point3Mesh>(meshutils::primitives::icosphere(5, 4, center));
+    Point3Mesh circlemesh = meshutils::primitives::circle(center, 10, 20);
+    meshutils::IO::write(std::make_shared<Point3Mesh>(circlemesh), "circlemesh.obj");
 
+    //std::shared_ptr<Point3Mesh> myMesh = std::make_shared<Point3Mesh>(meshutils::primitives::icosphere(5, 4, center));
+    
     //for (vertex_descriptor vd : myMesh->vertices())
     //{
     //    std::cout << "vertex:" << myMesh->point(vd) << " squared distance from center: " << CGAL::squared_distance(center, myMesh->point(vd)) << "\n";//returns about half of what it should? 
@@ -109,9 +121,10 @@ int main(int argc, char* argv[])
     //how do I get the number of vertices?
     //std::cout << myMesh->number_of_vertices();
 
-    meshutils::IO::write(myMesh, "icosahedronSphereMesh5.obj");
+    //meshutils::IO::write(myMesh, "icosahedronSphereMesh5.obj");
     
 
+    //CGAL::Sphere_3<Point> sphere(Point(0, 0, 0), 5);
     
 
    // //Load mesh
@@ -233,6 +246,7 @@ int main(int argc, char* argv[])
    // std::ofstream jsonStream(outputResultsFilePath.string());
    // jsonStream << std::setw(4) << j << std::endl;
    // jsonStream.close();
+
 
     return EXIT_SUCCESS;
 }
