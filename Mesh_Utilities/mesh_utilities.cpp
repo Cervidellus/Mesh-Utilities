@@ -3,9 +3,19 @@
 
 #include <numbers>
 
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Aff_transformation_3.h>
+#include <CGAL/aff_transformation_tags.h>
 #include <CGAL/boost/graph/generators.h>
+#include <CGAL/Polygon_mesh_processing/extrude.h>
+#include <CGAL/Polygon_mesh_processing/transform.h>
 #include <CGAL/subdivision_method_3.h>
 #include <CGAL/Subdivision_method_3/subdivision_masks_3.h>
+#include <Eigen/Geometry>
+
+#include <CGAL/Simple_cartesian.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/Vector_3.h>
 
 Point3Mesh meshutils::primitives::icosphere(const double radius, const int subdivisions, const Point center)
 {
@@ -47,6 +57,56 @@ Point3Mesh meshutils::primitives::circle(const Point center, const double radius
         }
     }
     return circle;
+}
+
+Point3Mesh meshutils::primitives::cylinder(const Point source, const double radius, const double height, const int num_vertices)
+{
+    Point3Mesh circle, cylinder;
+    Point target(source[0], source[1], source[2] + height);
+
+    //create a circle and extrude along z axis
+    circle = meshutils::primitives::circle(source, radius, num_vertices);
+    Vector vector(target, source);
+    CGAL::Polygon_mesh_processing::extrude_mesh(circle, cylinder, vector);
+
+    return cylinder;
+}
+
+Point3Mesh meshutils::primitives::cylinder(const Segment segment, const double radius, const int num_vertices)
+{
+    //TODO::Should I move these typedefs to mesh_types?
+    typedef CGAL::Aff_transformation_3<Kernel> Affine;
+    typedef Kernel::Direction_3 Direction;
+
+    //Construct a cylinder that starts at segemnt.source() and extends to to length of the segment in z. 
+    Point3Mesh cylinder;
+    Point source = segment.source();//TODO this should be a unique pointer
+    cylinder = meshutils::primitives::cylinder(
+        source,
+        radius,
+        sqrt(segment.squared_length()),
+        num_vertices);
+
+    Eigen::Vector3d initial(source[0],source[1],source[2] + sqrt(segment.squared_length()));
+    Eigen::Vector3d final(segment.to_vector()[0], segment.to_vector()[1], segment.to_vector()[2]);
+    Eigen::Quaternion<double> quaternion = Eigen::Quaternion<double>::FromTwoVectors(initial, final);
+    auto rotationMatrix = quaternion.toRotationMatrix();
+
+    Affine rotation({
+        rotationMatrix(0,0),
+        rotationMatrix(0,1),
+        rotationMatrix(0,2),
+        rotationMatrix(1,0),
+        rotationMatrix(1,1),
+        rotationMatrix(1,2),
+        rotationMatrix(2,0),
+        rotationMatrix(2,1),
+        rotationMatrix(2,2)
+        });
+    
+    CGAL::Polygon_mesh_processing::transform(rotation, cylinder);
+    
+    return cylinder;
 }
 
 void meshutils::subdivision::loop_subdivision(Point3Mesh& mesh, int subdivisions) {

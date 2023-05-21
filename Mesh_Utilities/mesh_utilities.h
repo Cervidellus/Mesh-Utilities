@@ -13,6 +13,12 @@ namespace meshutils {
 		
 		Point3Mesh circle(const Point center, const double radius, const int num_vertices);
 		//cylinder
+
+		Point3Mesh cylinder(const Point center, const double radius, const double height, const int num_vertices);
+		Point3Mesh cylinder(const Segment segment, const double radius, const int num_vertices);
+
+		//I want to provide overloads for circle and cylinder that will take a vector and produce an oriented circle and cylinder between the souce and target of the vector, respectively
+
 	}
 
 	namespace subdivision {

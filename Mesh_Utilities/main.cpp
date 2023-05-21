@@ -20,6 +20,18 @@
 #include "Mesh.h"
 //#include "mesh_types.h"
 
+
+
+#include <CGAL/Aff_transformation_3.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/Simple_cartesian.h>
+#include <CGAL/Vector_3.h>
+
+
+
+
+
 using namespace std;
 namespace po = boost::program_options;
 
@@ -91,8 +103,37 @@ int main(int argc, char* argv[])
     Point center(0, 0, 0);
     //Point3Mesh myMesh = meshutils::icosphere(5, 2, center);
 
-    Point3Mesh circlemesh = meshutils::primitives::circle(center, 10, 20);
-    meshutils::IO::write(std::make_shared<Point3Mesh>(circlemesh), "circlemesh.obj");
+    //Point3Mesh circlemesh = meshutils::primitives::circle(center, 10, 20);
+    //meshutils::IO::write(std::make_shared<Point3Mesh>(circlemesh), "circlemesh.obj");
+
+    //Default cylinder
+    Point3Mesh defaultCylinder = meshutils::primitives::cylinder(center, 3, 10, 20);
+    meshutils::IO::write(std::make_shared<Point3Mesh>(defaultCylinder), "cylindermesh_default.obj");
+
+    //Rotated
+    Point target(10, 10, 10);
+    Segment segment(center, target);
+    Point3Mesh cylinder = meshutils::primitives::cylinder(segment, 3, 20);
+    meshutils::IO::write(std::make_shared<Point3Mesh>(cylinder), "cylindermesh_rotated.obj");
+
+
+    //Rotated, but not starting on origin
+    Point newcenter (-10, 5, 5);
+    Point newtarget(-15, 0, 25);
+    Segment newsegment(newcenter, newtarget);
+    Point3Mesh newCylinder = meshutils::primitives::cylinder(newsegment, 3, 20);
+    meshutils::IO::write(std::make_shared<Point3Mesh>(newCylinder), "cylindermesh_notorigin.obj");
+    
+
+
+    //typedef CGAL::Aff_transformation_3<Kernel> Aff_transformation;
+    //Vector direction_vector(0, 5, 1);
+    //double angle = 45.0;
+    //Vector z_vector(0, 0, 1);
+    ////Aff_transformation rotation_matrix = Aff_transformation::
+    ////direction_vector.direction().
+    //auto myAngle = CGAL::angle(direction_vector, z_vector);
+    //std::cout << myAngle;
 
     //std::shared_ptr<Point3Mesh> myMesh = std::make_shared<Point3Mesh>(meshutils::primitives::icosphere(5, 4, center));
     
