@@ -3,8 +3,10 @@
 
 #include "SurfaceMesh.h"
 #include "mesh_utilities.h"
+#include "mesh_IO.h"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
 namespace py = pybind11;
@@ -16,9 +18,24 @@ PYBIND11_MODULE(meshutils, m) {
         .def("faceCount", &SurfaceMesh::faceCount, "return an int representing the number of faces in the object")
         .def("edgeCount", &SurfaceMesh::edgeCount, "return an int representing the number of edges in the object");
 
-    auto mPrimitives = m.def_submodule("primitives");
+    auto submoduleIO = m.def_submodule("IO");
 
-    mPrimitives.def("Icosphere", [](int radius, int subdivisions, py::array_t<double> center_point) {
+    submoduleIO.def("read", [](std::string filepath) {
+        std::shared_ptr<Point3Mesh> mesh = std::make_shared<Point3Mesh>();
+        meshutils::IO::read(filepath, mesh);
+        return SurfaceMesh(mesh);},
+        "read a surface mesh object from file.",
+        py::arg("filepath"));
+
+    submoduleIO.def("write", [](std::string filepath, SurfaceMesh mesh) {
+        meshutils::IO::write(mesh.meshData(), filepath);},
+        "read a surface mesh object from file.",
+        py::arg("filepath"),
+        py::arg("mesh"));
+
+    auto submodulePrimitives = m.def_submodule("primitives");
+
+    submodulePrimitives.def("icosphere", [](int radius, int subdivisions, py::array_t<double> center_point) {
         double* pointData = (double*)center_point.request().ptr;
         return SurfaceMesh(meshutils::primitives::icosphere(radius, 3, Point(pointData[0], pointData[1], pointData[3])));
         },

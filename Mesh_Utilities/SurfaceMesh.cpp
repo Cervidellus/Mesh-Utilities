@@ -13,6 +13,11 @@ SurfaceMesh::SurfaceMesh(std::shared_ptr<Point3Mesh> mesh)
 	mesh_ = mesh;
 }
 
+std::shared_ptr<Point3Mesh> SurfaceMesh::meshData()
+{
+	return mesh_;
+}
+
 int SurfaceMesh::vertexCount()
 {
 	return mesh_->number_of_vertices();
