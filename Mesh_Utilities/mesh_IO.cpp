@@ -1,5 +1,6 @@
 #include "mesh_IO.h"
 #include "helper_utils.h"
+#include "SurfaceMesh.h"
 
 #include <filesystem>
 #include <CGAL/boost/graph/named_params_helper.h>
@@ -60,4 +61,10 @@ bool meshutils::IO::write(std::shared_ptr<Point3Mesh> mesh, const std::string& f
 
     //write
     return CGAL::IO::write_polygon_mesh(filepath, *mesh);
+}
+
+SurfaceMesh meshutils::IO::fromMeshpartyMesh(const py::object& meshparty_mesh)
+{
+    SurfaceMesh mesh = SurfaceMesh();
+    return SurfaceMesh();
 }

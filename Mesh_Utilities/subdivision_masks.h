@@ -5,21 +5,6 @@
 
 #include <cmath>
 
-//PTQMask_3(PolygonMesh* pmesh)
-//Constructor.More...
-//
-//PTQMask_3(PolygonMesh* pmesh, VertexPointMap vpmap)
-//Constructor.
-//
-//void 	edge_node(halfedge_descriptor hd, Point_3& pt)
-//computes the edge - point pt based on the neighborhood of the edge hd.
-//
-//void 	vertex_node(vertex_descriptor vd, Point_3 & pt)
-//computes the vertex - point pt based on the neighborhood of the vertex vd.
-//
-//void 	border_node(halfedge_descriptor hd, Point_3 & ept, Point_3 & vpt)
-//computes the edge - point ept and the vertex - point vpt based on the neighborhood of the border edge of hd.More...
-
 class Spherical_Loop_mask {
 
 public:

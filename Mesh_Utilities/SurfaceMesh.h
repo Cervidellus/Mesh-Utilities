@@ -3,27 +3,38 @@
 
 #include "mesh_types.h"
 //Will offer class methods to operate on that mesh, such as returning a skeleton (and holding it internally as a member)
+//It's main purpose is to wrap CGAL's Surface_Mesh into an interface suitable for presenting to a Python module.
 
-class Mesh
+class SurfaceMesh
 {
 public:
-	Mesh();
-	//add a constructor overload that takes a filepath
+	SurfaceMesh();
+	SurfaceMesh(std::shared_ptr<Point3Mesh> mesh);
 
-	void testPrint(int i);//just to test the python interface
+	void setMeshData(std::shared_ptr<Point3Mesh> mesh);
+	std::shared_ptr<Point3Mesh> meshData();
+
+	//add a constructor overload that takes a filepath
 
 	//Properties
 	//vertices
 	// setVertices
-	// vertexCount
+
+	//just for testing
+	int vertexCount();
+	int faceCount();
+	int edgeCount();
 	//faces
 	// setFaces
 	// faceCount
 	//what else?
 
-	//IO
-	//void fromPlyFile(std::string fileName);
-	//void toPlyFile(std::string fileName, bool binary = true);
+
+	//Should I move the IO methods here? 
+	//fromFile
+	//toFile
+	//fromMeshParty
+	//fromTrimesh
 
 	//Skeletonization
 	//For this I will want it to return a skeleton object. It will store as a memeber shared pointer. If it does not exist, it will create it. 

@@ -17,20 +17,13 @@
 #include "mesh_utilities.h"
 //#include "tinycolormap.hpp"
 
-#include "Mesh.h"
-//#include "mesh_types.h"
-
-
+#include "SurfaceMesh.h"
 
 #include <CGAL/Aff_transformation_3.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Vector_3.h>
-
-
-
-
 
 using namespace std;
 namespace po = boost::program_options;
@@ -106,23 +99,30 @@ int main(int argc, char* argv[])
     //Point3Mesh circlemesh = meshutils::primitives::circle(center, 10, 20);
     //meshutils::IO::write(std::make_shared<Point3Mesh>(circlemesh), "circlemesh.obj");
 
-    //Default cylinder
-    Point3Mesh defaultCylinder = meshutils::primitives::cylinder(center, 3, 10, 20);
-    meshutils::IO::write(std::make_shared<Point3Mesh>(defaultCylinder), "cylindermesh_default.obj");
+    auto sphere_5_2 = meshutils::primitives::icosphere(5, 2, center);
+    auto sphere_10_2 = meshutils::primitives::icosphere(10, 2, center);
+    auto sphere_5_4 = meshutils::primitives::icosphere(5, 4, center);
+    meshutils::IO::write(sphere_5_2, "sphere_5_2.obj");
+    meshutils::IO::write(sphere_10_2, "sphere_10_2.obj");
+    meshutils::IO::write(sphere_5_4, "sphere_5_4.obj");
 
-    //Rotated
-    Point target(10, 10, 10);
-    Segment segment(center, target);
-    Point3Mesh cylinder = meshutils::primitives::cylinder(segment, 3, 20);
-    meshutils::IO::write(std::make_shared<Point3Mesh>(cylinder), "cylindermesh_rotated.obj");
+    ////Default cylinder
+    //auto defaultCylinder = meshutils::primitives::cylinder(center, 3, 10, 20);
+    //meshutils::IO::write(defaultCylinder, "cylindermesh_default.obj");
+
+    ////Rotated
+    //Point target(10, 10, 10);
+    //Segment segment(center, target);
+    //auto cylinder = meshutils::primitives::cylinder(segment, 3, 20);
+    //meshutils::IO::write(cylinder, "cylindermesh_rotated.obj");
 
 
-    //Rotated, but not starting on origin
-    Point newcenter (-10, 5, 5);
-    Point newtarget(-15, 0, 25);
-    Segment newsegment(newcenter, newtarget);
-    Point3Mesh newCylinder = meshutils::primitives::cylinder(newsegment, 3, 20);
-    meshutils::IO::write(std::make_shared<Point3Mesh>(newCylinder), "cylindermesh_notorigin.obj");
+    ////Rotated, but not starting on origin
+    //Point newcenter (-10, 5, 5);
+    //Point newtarget(-15, 0, 25);
+    //Segment newsegment(newcenter, newtarget);
+    //auto newCylinder = meshutils::primitives::cylinder(newsegment, 3, 20);
+    //meshutils::IO::write(newCylinder, "cylindermesh_notorigin.obj");
     
 
 

@@ -17,17 +17,17 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Vector_3.h>
 
-Point3Mesh meshutils::primitives::icosphere(const double radius, const int subdivisions, const Point center)
+std::shared_ptr<Point3Mesh> meshutils::primitives::icosphere(const double radius, const int subdivisions, const Point center)
 {
     Point3Mesh sphere_mesh;
     CGAL::make_icosahedron(sphere_mesh, center, radius);
     Spherical_Loop_mask mask(sphere_mesh, center, radius);
     CGAL::Subdivision_method_3::PTQ(sphere_mesh, mask, subdivisions);
 
-    return sphere_mesh;
+    return std::make_unique<Point3Mesh>(sphere_mesh);
 }
 
-Point3Mesh meshutils::primitives::circle(const Point center, const double radius, const int num_vertices)//should I add an axis?
+std::shared_ptr<Point3Mesh> meshutils::primitives::circle(const Point center, const double radius, const int num_vertices)//should I add an axis?
 {
     //Produces a triangular circle mesh  on the XY plane centered around a Point 'center', with edge vertices 'num_vertices'
 
@@ -56,32 +56,31 @@ Point3Mesh meshutils::primitives::circle(const Point center, const double radius
             }
         }
     }
-    return circle;
+    return std::make_unique<Point3Mesh>(circle);
 }
 
-Point3Mesh meshutils::primitives::cylinder(const Point source, const double radius, const double height, const int num_vertices)
+std::shared_ptr<Point3Mesh> meshutils::primitives::cylinder(const Point source, const double radius, const double height, const int num_vertices)
 {
-    Point3Mesh circle, cylinder;
+    Point3Mesh cylinder;
     Point target(source[0], source[1], source[2] + height);
 
     //create a circle and extrude along z axis
-    circle = meshutils::primitives::circle(source, radius, num_vertices);
+    auto circle = meshutils::primitives::circle(source, radius, num_vertices);
     Vector vector(target, source);
-    CGAL::Polygon_mesh_processing::extrude_mesh(circle, cylinder, vector);
+    CGAL::Polygon_mesh_processing::extrude_mesh(*circle, cylinder, vector);
 
-    return cylinder;
+    return std::make_unique<Point3Mesh>(cylinder);
 }
 
-Point3Mesh meshutils::primitives::cylinder(const Segment segment, const double radius, const int num_vertices)
+std::shared_ptr<Point3Mesh> meshutils::primitives::cylinder(const Segment segment, const double radius, const int num_vertices)
 {
     //TODO::Should I move these typedefs to mesh_types?
     typedef CGAL::Aff_transformation_3<Kernel> Affine;
     typedef Kernel::Direction_3 Direction;
 
     //Construct a cylinder that starts at segemnt.source() and extends to to length of the segment in z. 
-    Point3Mesh cylinder;
     Point source = segment.source();//TODO this should be a unique pointer
-    cylinder = meshutils::primitives::cylinder(
+    auto cylinder = meshutils::primitives::cylinder(
         source,
         radius,
         sqrt(segment.squared_length()),
@@ -104,7 +103,7 @@ Point3Mesh meshutils::primitives::cylinder(const Segment segment, const double r
         rotationMatrix(2,2)
         });
     
-    CGAL::Polygon_mesh_processing::transform(rotation, cylinder);
+    CGAL::Polygon_mesh_processing::transform(rotation, *cylinder);
     
     return cylinder;
 }
