@@ -16,6 +16,7 @@ namespace meshutils {
         bool read(const std::string& filepath, std::shared_ptr<Point3Mesh> mesh);
         bool write(std::shared_ptr<Point3Mesh> mesh, const std::string& filepath);
         SurfaceMesh fromMeshpartyMesh(const py::object &meshparty_mesh);
+
         
     }
 }

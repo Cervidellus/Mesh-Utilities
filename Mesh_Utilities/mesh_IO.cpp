@@ -5,6 +5,9 @@
 #include <filesystem>
 #include <CGAL/boost/graph/named_params_helper.h>
 #include <CGAL/Polygon_mesh_processing/IO/polygon_mesh_io.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 
 using namespace std;
 //error handling.. here I essentially do that with the bool, but better would be returning for example a CGAL_IO_ERROR type or something. 
@@ -65,6 +68,68 @@ bool meshutils::IO::write(std::shared_ptr<Point3Mesh> mesh, const std::string& f
 
 SurfaceMesh meshutils::IO::fromMeshpartyMesh(const py::object& meshparty_mesh)
 {
+    //py::array_t<double> meshpartyVerts = meshparty_mesh.attr("vertices").cast<py::array_t<double>>();
+    //py::array_t<int> meshpartyFaces = meshparty_mesh.attr("faces").cast<py::array_t<int>>();
+    //pybind offers faster access when we make assumptions about the shape using the unchecked method.
+    //auto uncheckedVerts = meshpartyVerts.unchecked<3>();
+    //auto uncheckedFaces = meshpartyFaces.unchecked<3>();
+
     SurfaceMesh mesh = SurfaceMesh();
-    return SurfaceMesh();
+    std::shared_ptr<Point3Mesh> meshData = mesh.meshData();
+    
+    //for (int i = 0; i < uncheckedVerts.shape(0); i++)
+    //    for(int j = 0; j < uncheckedVerts.shape(1); j++)
+    //        for (int k = 0; k < uncheckedVerts.shape(2); k++) {
+    //            //below causes a failure to compile with 'Invalid number of indices for unchecked array reference
+    //            auto x = uncheckedVerts(3.25);
+    //            meshData->add_vertex(Point(uncheckedVerts(i), uncheckedVerts(j), uncheckedVerts(k)));
+    //        }
+
+//Mesh trimesh_to_surface_mesh(py::object & trimesh) {
+    //auto vertices = meshparty_mesh.attr("vertices").cast<py::array_t<float>>();
+    //auto faces = meshparty_mesh.attr("faces").cast<py::array_t<uint32_t>>();
+
+    //Mesh mesh;
+
+    auto vertices = meshparty_mesh.attr("vertices").cast<py::array_t<double>>();
+    auto faces = meshparty_mesh.attr("faces").cast<py::array_t<uint32_t>>();
+
+    std::vector<Point3Mesh::Vertex_index> vertex_indices;
+    vertex_indices.reserve(vertices.shape(0));
+    for (int i = 0; i < vertices.shape(0); ++i) {
+        auto point = Point(vertices.at(i, 0), vertices.at(i, 1), vertices.at(i, 2));
+        vertex_indices.push_back(meshData->add_vertex(point));
+    }
+    for (int i = 0; i < faces.shape(0); ++i) {
+        std::vector<Point3Mesh::Vertex_index> face_vertices;
+        face_vertices.reserve(faces.shape(1));
+        for (int j = 0; j < faces.shape(1); ++j) {
+            face_vertices.push_back(vertex_indices[faces.at(i, j)]);
+        }
+        meshData->add_face(face_vertices);
+    }
+
+
+
+
+    //somehow unchecked is giving me an issue.
+    //std::vector<Point3Mesh::vertex_index> vertex_indices;
+    //vertex_indices.reserve(meshpartyVerts.shape(0));
+    //auto vertices_unchecked = meshpartyVerts.unchecked<3>();
+    //for (int i = 0; i < meshpartyVerts.shape(0); ++i) {
+    //    auto point = Point(vertices_unchecked(i, 0), vertices_unchecked(i, 1), vertices_unchecked(i, 2));
+    //    vertex_indices.push_back(meshData->add_vertex(point));
+    //}
+
+    //auto faces_unchecked = meshpartyFaces.unchecked<2>();
+    //for (int i = 0; i < meshpartyFaces.shape(0); ++i) {
+    //    std::vector<Point3Mesh::Vertex_index> face_vertices;
+    //    face_vertices.reserve(meshpartyFaces.shape(1));
+    //    for (int j = 0; j < meshpartyFaces.shape(1); ++j) {
+    //        face_vertices.push_back(vertex_indices[faces_unchecked(i, j)]);
+    //    }
+    //    meshData->add_face(face_vertices);
+    //}
+    return mesh;
 }
+ 

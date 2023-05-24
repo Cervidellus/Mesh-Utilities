@@ -20,17 +20,24 @@ PYBIND11_MODULE(meshutils, m) {
 
     auto submoduleIO = m.def_submodule("IO");
 
-    submoduleIO.def("read", [](std::string filepath) {
+    submoduleIO.def("read", 
+        [](std::string filepath) {
         std::shared_ptr<Point3Mesh> mesh = std::make_shared<Point3Mesh>();
         meshutils::IO::read(filepath, mesh);
         return SurfaceMesh(mesh);},
         "read a surface mesh object from file.",
         py::arg("filepath"));
 
-    submoduleIO.def("write", [](std::string filepath, SurfaceMesh mesh) {
+    submoduleIO.def("write", 
+        [](std::string filepath, SurfaceMesh mesh) {
         meshutils::IO::write(mesh.meshData(), filepath);},
         "read a surface mesh object from file.",
         py::arg("filepath"),
+        py::arg("mesh"));
+
+    submoduleIO.def("fromTrimesh",
+        &meshutils::IO::fromMeshpartyMesh,
+        "Surface mesh from a trimesh or meshparty mesh.",
         py::arg("mesh"));
 
     auto submodulePrimitives = m.def_submodule("primitives");
