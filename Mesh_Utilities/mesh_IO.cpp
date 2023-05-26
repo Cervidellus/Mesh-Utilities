@@ -1,6 +1,7 @@
 #include "mesh_IO.h"
 #include "helper_utils.h"
 #include "SurfaceMesh.h"
+#include "Skeleton.h"
 
 #include <filesystem>
 #include <CGAL/boost/graph/named_params_helper.h>
@@ -49,7 +50,7 @@ bool meshutils::IO::write(std::shared_ptr<Point3Mesh> mesh, const std::string& f
     std::filesystem::path filePath = filepath;
     std::string lowerCaseExtension = helpers::str_tolower(filePath.extension().string());
 
-    if (!(lowerCaseExtension == ".obj" || lowerCaseExtension == ".ply" || lowerCaseExtension == ".off")) // Heed the dot.
+    if (!(lowerCaseExtension == ".obj" || lowerCaseExtension == ".ply" || lowerCaseExtension == ".off")) 
     {
         std::cout << lowerCaseExtension << " is an invalid file extension.";
         return false;
@@ -66,30 +67,10 @@ bool meshutils::IO::write(std::shared_ptr<Point3Mesh> mesh, const std::string& f
     return CGAL::IO::write_polygon_mesh(filepath, *mesh);
 }
 
-SurfaceMesh meshutils::IO::fromMeshpartyMesh(const py::object& meshparty_mesh)
+SurfaceMesh meshutils::IO::surfaceMeshFromMeshpartyMesh(const py::object& meshparty_mesh)
 {
-    //py::array_t<double> meshpartyVerts = meshparty_mesh.attr("vertices").cast<py::array_t<double>>();
-    //py::array_t<int> meshpartyFaces = meshparty_mesh.attr("faces").cast<py::array_t<int>>();
-    //pybind offers faster access when we make assumptions about the shape using the unchecked method.
-    //auto uncheckedVerts = meshpartyVerts.unchecked<3>();
-    //auto uncheckedFaces = meshpartyFaces.unchecked<3>();
-
     SurfaceMesh mesh = SurfaceMesh();
     std::shared_ptr<Point3Mesh> meshData = mesh.meshData();
-    
-    //for (int i = 0; i < uncheckedVerts.shape(0); i++)
-    //    for(int j = 0; j < uncheckedVerts.shape(1); j++)
-    //        for (int k = 0; k < uncheckedVerts.shape(2); k++) {
-    //            //below causes a failure to compile with 'Invalid number of indices for unchecked array reference
-    //            auto x = uncheckedVerts(3.25);
-    //            meshData->add_vertex(Point(uncheckedVerts(i), uncheckedVerts(j), uncheckedVerts(k)));
-    //        }
-
-//Mesh trimesh_to_surface_mesh(py::object & trimesh) {
-    //auto vertices = meshparty_mesh.attr("vertices").cast<py::array_t<float>>();
-    //auto faces = meshparty_mesh.attr("faces").cast<py::array_t<uint32_t>>();
-
-    //Mesh mesh;
 
     auto vertices = meshparty_mesh.attr("vertices").cast<py::array_t<double>>();
     auto faces = meshparty_mesh.attr("faces").cast<py::array_t<uint32_t>>();
@@ -108,28 +89,27 @@ SurfaceMesh meshutils::IO::fromMeshpartyMesh(const py::object& meshparty_mesh)
         }
         meshData->add_face(face_vertices);
     }
-
-
-
-
-    //somehow unchecked is giving me an issue.
-    //std::vector<Point3Mesh::vertex_index> vertex_indices;
-    //vertex_indices.reserve(meshpartyVerts.shape(0));
-    //auto vertices_unchecked = meshpartyVerts.unchecked<3>();
-    //for (int i = 0; i < meshpartyVerts.shape(0); ++i) {
-    //    auto point = Point(vertices_unchecked(i, 0), vertices_unchecked(i, 1), vertices_unchecked(i, 2));
-    //    vertex_indices.push_back(meshData->add_vertex(point));
-    //}
-
-    //auto faces_unchecked = meshpartyFaces.unchecked<2>();
-    //for (int i = 0; i < meshpartyFaces.shape(0); ++i) {
-    //    std::vector<Point3Mesh::Vertex_index> face_vertices;
-    //    face_vertices.reserve(meshpartyFaces.shape(1));
-    //    for (int j = 0; j < meshpartyFaces.shape(1); ++j) {
-    //        face_vertices.push_back(vertex_indices[faces_unchecked(i, j)]);
-    //    }
-    //    meshData->add_face(face_vertices);
-    //}
     return mesh;
+}
+
+Skeleton meshutils::IO::skeletonFromMeshpartySkeleton(const py::object& meshparty_skeleton)
+{
+    Skeleton skeleton = Skeleton();
+    auto vertices = meshparty_skeleton.attr("vertices").cast<py::array_t<double>>();
+    auto edges = meshparty_skeleton.attr("edges").cast<py::array_t<int>>();
+
+    for (int i = 0; i < vertices.shape(0); ++i) {
+        auto point = Point(vertices.at(i, 0), vertices.at(i, 1), vertices.at(i, 2));
+        Skeleton_vertex v = boost::add_vertex(*skeleton.skeletonData);
+        skeleton.skeletonData->operator[](v).point = point;
+    }
+
+    for (int i = 0; i < edges.shape(0); ++i) {
+        Skeleton_vertex v = edges.at(i,0);
+        Skeleton_vertex w = edges.at(i,1);
+        auto e = boost::add_edge(v, w, *skeleton.skeletonData);
+    }
+
+    return skeleton;
 }
  

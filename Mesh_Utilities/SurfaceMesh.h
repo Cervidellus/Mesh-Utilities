@@ -2,6 +2,7 @@
 #define MESHUTILS_MESH
 
 #include "mesh_types.h"
+
 //Will offer class methods to operate on that mesh, such as returning a skeleton (and holding it internally as a member)
 //It's main purpose is to wrap CGAL's Surface_Mesh into an interface suitable for presenting to a Python module.
 

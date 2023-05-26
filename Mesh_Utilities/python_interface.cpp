@@ -1,6 +1,7 @@
 #ifndef MESHUTILS_PYTHON
 #define MESHUTILS_PYTHON
 
+#include "Skeleton.h"
 #include "SurfaceMesh.h"
 #include "mesh_utilities.h"
 #include "mesh_IO.h"
@@ -17,6 +18,11 @@ PYBIND11_MODULE(meshutils, m) {
         .def("vertexCount", &SurfaceMesh::vertexCount, "return an int representing the number of vertices in the object")
         .def("faceCount", &SurfaceMesh::faceCount, "return an int representing the number of faces in the object")
         .def("edgeCount", &SurfaceMesh::edgeCount, "return an int representing the number of edges in the object");
+
+    py::class_<Skeleton>(m, "Skeleton")
+        .def(py::init<>())
+        .def("edgeCount", &Skeleton::edgeCount, "return an int representing the number of edges in the object")
+        .def("vertexCount", &Skeleton::vertexCount, "return an int representing the number of vertices in the object");
 
     auto submoduleIO = m.def_submodule("IO");
 
@@ -35,10 +41,15 @@ PYBIND11_MODULE(meshutils, m) {
         py::arg("filepath"),
         py::arg("mesh"));
 
-    submoduleIO.def("fromTrimesh",
-        &meshutils::IO::fromMeshpartyMesh,
+    submoduleIO.def("SurfaceMeshFromTrimesh",
+        &meshutils::IO::surfaceMeshFromMeshpartyMesh,
         "Surface mesh from a trimesh or meshparty mesh.",
         py::arg("mesh"));
+
+    submoduleIO.def("SkeletonFromMeshpartySkeleton",
+        &meshutils::IO::skeletonFromMeshpartySkeleton,
+        "Skeleton from a Meshparty skeleton.",
+        py::arg("skeleton"));
 
     auto submodulePrimitives = m.def_submodule("primitives");
 

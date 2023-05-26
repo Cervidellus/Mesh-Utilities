@@ -126,7 +126,6 @@ Point3Mesh meshutils::skel_to_mesh(const Mean_Curvature_Flow_Skeleton& skeleton)
     return mesh;
 }
 
-//Here I am passing in a mesh and returning a mesh. I think I should pass in a mesh and return an error. 
 Point3Mesh meshutils::color_skel_to_mesh(Mean_Curvature_Flow_Skeleton& skeleton, Point3Mesh& mesh)
 {
     Point3Mesh::Property_map<Point3Mesh::Vertex_index, CGAL::Color> mesh_vertex_colors = mesh.property_map<Point3Mesh::Vertex_index, CGAL::Color >("v:color").first;
