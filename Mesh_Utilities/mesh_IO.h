@@ -17,8 +17,14 @@ namespace meshutils {
         //IO methods
         bool read(const std::string& filepath, std::shared_ptr<Point3Mesh> mesh);
         bool write(std::shared_ptr<Point3Mesh> mesh, const std::string& filepath);
+
         SurfaceMesh surfaceMeshFromMeshpartyMesh(const py::object &meshparty_mesh);
+        SurfaceMesh surfaceMeshFromSkeleton(std::shared_ptr<Point3Mesh> mesh, double vertexRadius, double edgeRadius);
+
         Skeleton skeletonFromMeshpartySkeleton(const py::object& meshparty_skeleton);
+
+        //TODO
+        //py::object meshpartySkeletonFromSkeleton(const Skeleton& skeleton);
     }
 }
 

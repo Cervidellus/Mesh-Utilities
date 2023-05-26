@@ -14,12 +14,37 @@ Skeleton::Skeleton():
 
 int Skeleton::edgeCount()
 {
-    return boost::num_edges(*skeletonData);
+    return int(boost::num_edges(*skeletonData));
 }
 
 int Skeleton::vertexCount()
 {
     return boost::num_vertices(*skeletonData);
+}
+
+std::vector<std::array<double, 3>> Skeleton::vertices()
+{
+    std::vector<std::array<double, 3>> vertices;
+    
+    for (int i = 0; i < boost::num_vertices(*skeletonData); i++) {
+        Point point = skeletonData->operator[](i).point;
+        vertices.push_back(std::array<double, 3>{point.x(), point.y(), point.z()});
+    }
+
+    return vertices;
+}
+
+std::vector<std::pair<int, int>> Skeleton::edges()
+{
+    std::vector<std::pair<int, int>> edges;
+
+    for (const Skeleton_edge edge : CGAL::make_range(boost::edges(*skeletonData))) {
+        int source = boost::source(edge, *skeletonData);
+        int target = boost::target(edge, *skeletonData);
+        edges.push_back(std::pair<int, int>(source, target));
+    }
+
+    return edges;
 }
 
 void Skeleton::generateSkeleton_() {

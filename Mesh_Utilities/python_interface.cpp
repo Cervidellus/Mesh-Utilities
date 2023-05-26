@@ -22,7 +22,38 @@ PYBIND11_MODULE(meshutils, m) {
     py::class_<Skeleton>(m, "Skeleton")
         .def(py::init<>())
         .def("edgeCount", &Skeleton::edgeCount, "return an int representing the number of edges in the object")
-        .def("vertexCount", &Skeleton::vertexCount, "return an int representing the number of vertices in the object");
+        .def("vertexCount", &Skeleton::vertexCount, "return an int representing the number of vertices in the object")
+        .def("vertices", 
+            [](Skeleton& skeleton){
+                //We first make an array, then we shape it to represent 3 dimensional vertices.
+                auto vertices = skeleton.vertices();
+                py::print(vertices.size(), " size of vertices.");
+                auto pyvertices = py::array_t<double>(vertices.size() * vertices[0].size());
+                auto pyvertices_buffer = pyvertices.mutable_data();
+                for (auto& point : vertices) {
+                    std::memcpy(pyvertices_buffer, point.data(), point.size() * sizeof(double));
+                    pyvertices_buffer += point.size();
+                }
+                std::vector<py::ssize_t> shape = { static_cast<py::ssize_t>(vertices.size()), static_cast<py::ssize_t>(vertices[0].size()) };
+                return pyvertices.reshape(shape).attr("copy")();
+            },
+            "return an array containing the vertices in the skeleton.")
+        .def("edges",
+            [](Skeleton& skeleton) {
+                auto edges = skeleton.edges();
+                py::print(edges.size(), " size of edges.");
+                auto pyedges = py::array_t<int>(edges.size() * 2);
+                auto pyedgesUnchecked = pyedges.mutable_unchecked<1>();
+
+                for (int i = 0; i < edges.size(); i++) {
+                    
+                    pyedgesUnchecked[i * 2] = edges[i].first;
+                    pyedgesUnchecked[i * 2 + 1] = edges[i].second;
+                }
+                std::vector<py::ssize_t> shape = { static_cast<py::ssize_t>(edges.size()),2 };
+                return pyedges.reshape(shape).attr("copy")();
+            },
+            "return an array containing vertex index pairs representing the edges in the skeleton.");
 
     auto submoduleIO = m.def_submodule("IO");
 

@@ -67,13 +67,13 @@ public:
 	int vertexCount();
 	
 	//vertices()
+	std::vector<std::array<double, 3>> vertices();
+	std::vector<std::pair<int,int>> edges();
 	//edges()
 
 	//IO
-	//void toMesh(std::shared_ptr<Point3Mesh> mesh);
-	//How do I want this done? Do I want it as points and edges, which would not be supported by most file formats?
-	//Do I want to make a cylindar sphere model? 
-	//For the latter, I could make some primitives in mesh_utilities for a sphere and cylinder
+	
+	
 
 private:
 	//std::shared_ptr<Point3Mesh> mesh_ = nullptr;//I don't think I need this as I Skeleton has a map.. but doesn't hurt to have it. 
