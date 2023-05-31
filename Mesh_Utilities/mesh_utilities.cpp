@@ -1,4 +1,5 @@
 #include "mesh_utilities.h"
+#include "mesh_types.h"
 #include "subdivision_masks.h"
 
 #include <numbers>
@@ -11,18 +12,76 @@
 #include <CGAL/Polygon_mesh_processing/transform.h>
 #include <CGAL/subdivision_method_3.h>
 #include <CGAL/Subdivision_method_3/subdivision_masks_3.h>
-#include <Eigen/Geometry>
-
+#include <CGAL/Surface_mesh_deformation.h>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Vector_3.h>
 
+#include <Eigen/Geometry>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+
+namespace py = pybind11;
+
 std::shared_ptr<Point3Mesh> meshutils::primitives::icosphere(const double radius, const int subdivisions, const Point center)
 {
     Point3Mesh sphere_mesh;
-    CGAL::make_icosahedron(sphere_mesh, center, radius);
-    Spherical_Loop_mask mask(sphere_mesh, center, radius);
+    //CGAL::make_icosahedron(sphere_mesh, center, radius);
+    //Spherical_Loop_mask mask(sphere_mesh, center, radius);
+    //CGAL::Subdivision_method_3::PTQ(sphere_mesh, mask, subdivisions);
+
+    py::print("subdivisions:", subdivisions);
+    py::print("radius:", radius);
+    //trying to make the point at origin, then moving it.
+    CGAL::make_icosahedron(sphere_mesh, Point(0,0,0), radius);
+    Spherical_Loop_mask mask(sphere_mesh, Point(0,0,0), radius);
     CGAL::Subdivision_method_3::PTQ(sphere_mesh, mask, subdivisions);
+
+    py::print("finished making sphere.");
+
+    //If I do it this way, I should make a separate method that can be used by all primitives as well as be called in python
+    //CGAL::Aff_transformation_3<CGAL::Simple_cartesian<double>> translation(CGAL::TRANSLATION, Vector(center.x(), center.y(), center.z()));
+    //for (Point3Mesh::vertex_index v : sphere_mesh.vertices())
+    //{
+    //    sphere_mesh.point(v) = sphere_mesh.point(v).transform(translation);
+    //}
+    CGAL::Aff_transformation_3<CGAL::Simple_cartesian<double>> translation(CGAL::TRANSLATION, Vector(1, 1, 1));
+    for (Point3Mesh::vertex_index v : sphere_mesh.vertices())
+    {
+        auto point = sphere_mesh.point(v);
+
+        sphere_mesh.point(v) = Point(
+            point.x() + center.x(), 
+            point.y() + center.y(), 
+            point.z() + center.z());
+
+        //py::print("Point:", point.x(), " ", point.y(), " ", point.z());
+        //py::print("New Point:", point.x() + center.x(), " ",
+        //    point.y() + center.y(), " ",
+        //    point.z() + center.z());
+
+        //auto x = center.x();
+        //for (int i = 0; i < center.x(); i++) {
+        //    //sphere_mesh.point(v) = sphere_mesh.point(v).transform(translation);
+    }
+
+
+    //what if move 1 unit at a time?
+
+
+    //CGAL::Surface_mesh_deformation<Point3Mesh> deformation(sphere_mesh);
+
+    //py::print("created deformation.");
+
+    //below is slow,then crashes
+    //auto x = sphere_mesh.vertices();
+    //
+    //deformation.translate(sphere_mesh.vertices_begin(), sphere_mesh.vertices_end(), center);
+    //deformation.deform();
+
+    py::print("finished moving sphere.");//never gets here... 
 
     return std::make_unique<Point3Mesh>(sphere_mesh);
 }

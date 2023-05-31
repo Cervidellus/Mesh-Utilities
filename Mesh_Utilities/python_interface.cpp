@@ -53,7 +53,10 @@ PYBIND11_MODULE(meshutils, m) {
                 std::vector<py::ssize_t> shape = { static_cast<py::ssize_t>(edges.size()),2 };
                 return pyedges.reshape(shape).attr("copy")();
             },
-            "return an array containing vertex index pairs representing the edges in the skeleton.");
+            "return an array containing vertex index pairs representing the edges in the skeleton.")
+        .def("toSurfaceMesh",
+            &Skeleton::toSurfaceMesh,
+            "Generates spheres for vertices and cylinders for edges in the skeleton, and returns them a SurfaceMesh.");
 
     auto submoduleIO = m.def_submodule("IO");
 
@@ -86,11 +89,11 @@ PYBIND11_MODULE(meshutils, m) {
 
     submodulePrimitives.def("icosphere", [](int radius, int subdivisions, py::array_t<double> center_point) {
         double* pointData = (double*)center_point.request().ptr;
-        return SurfaceMesh(meshutils::primitives::icosphere(radius, 3, Point(pointData[0], pointData[1], pointData[3])));
+        return SurfaceMesh(meshutils::primitives::icosphere(radius, subdivisions, Point(pointData[0], pointData[1], pointData[3])));
         },
         "Returns a sphere constructed similarly to a Blender icosphere. It is constructed by first subdividing an icosahedron, then projecting the vertices onto a sphere of the correct radius.",
         py::arg("radius") = 5,
-        py::arg("subdivisions") = 3,
+        py::arg("subdivisions") = int(3),
         py::arg("center_point") = py::array_t<double>(3,std::vector<double>{4,5,6}.data()));
 }
 

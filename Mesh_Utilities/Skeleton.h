@@ -53,6 +53,8 @@
 
 //What do I want to hold in memory? I think the CGAL Skeleton type is ok. The VMAP doesn't apply to a meshparty skeleton though. Can I just leave it empty?
 
+class SurfaceMesh;
+
 class Skeleton
 {
 public:
@@ -62,18 +64,13 @@ public:
 	std::shared_ptr<Point3Mesh> sourceMesh = nullptr;//I don't think I need this as I Skeleton has a map.. but doesn't hurt to have it. 
 	std::shared_ptr<Mean_Curvature_Flow_Skeleton> skeletonData;
 
-	//properties
 	int edgeCount();
 	int vertexCount();
 	
-	//vertices()
 	std::vector<std::array<double, 3>> vertices();
 	std::vector<std::pair<int,int>> edges();
-	//edges()
 
-	//IO
-	
-	
+	SurfaceMesh toSurfaceMesh(double vertexRadius, double edgeRadius);
 
 private:
 	//std::shared_ptr<Point3Mesh> mesh_ = nullptr;//I don't think I need this as I Skeleton has a map.. but doesn't hurt to have it. 

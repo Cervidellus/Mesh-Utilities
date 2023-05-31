@@ -7,6 +7,7 @@
 #include <CGAL/extract_mean_curvature_flow_skeleton.h>
 #include <CGAL/boost/graph/split_graph_into_polylines.h>
 
+//typedef CGAL::Exact_predicates_exact_constructions_kernel
 typedef CGAL::Simple_cartesian<double>                                              Kernel;
 typedef Kernel::Point_3                                                             Point;
 typedef Kernel::Vector_3                                                            Vector;
