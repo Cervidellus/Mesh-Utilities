@@ -19,7 +19,6 @@ namespace meshutils {
         bool write(std::shared_ptr<Point3Mesh> mesh, const std::string& filepath);
 
         SurfaceMesh surfaceMeshFromMeshpartyMesh(const py::object &meshparty_mesh);
-        
 
         Skeleton skeletonFromMeshpartySkeleton(const py::object& meshparty_skeleton);
 
