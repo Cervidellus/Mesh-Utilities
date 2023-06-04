@@ -39,7 +39,7 @@ std::vector<std::array<double, 3>> Skeleton::vertices()
     
     for (int i = 0; i < boost::num_vertices(*skeletonData); i++) {
         Point point = skeletonData->operator[](i).point;
-        vertices.push_back(std::array<double, 3>{point.x(), point.y(), point.z()});
+        vertices.push_back(std::array<double, 3>{CGAL::to_double(point.x()), CGAL::to_double(point.y()), CGAL::to_double(point.z())});
     }
 
     return vertices;

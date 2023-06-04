@@ -47,39 +47,39 @@ std::shared_ptr<Point3Mesh> meshutils::primitives::icosphere(const double radius
     //{
     //    sphere_mesh.point(v) = sphere_mesh.point(v).transform(translation);
     //}
-    CGAL::Aff_transformation_3<CGAL::Simple_cartesian<double>> translation(CGAL::TRANSLATION, Vector(1, 1, 1));
-    for (Point3Mesh::vertex_index v : sphere_mesh.vertices())
-    {
-        auto point = sphere_mesh.point(v);
+    CGAL::Aff_transformation_3<Kernel> translation(CGAL::TRANSLATION, Vector(1, 1, 1));
+    //for (Point3Mesh::vertex_index v : sphere_mesh.vertices())
+    //{
+    //    auto point = sphere_mesh.point(v);
 
-        sphere_mesh.point(v) = Point(
-            point.x() + center.x(), 
-            point.y() + center.y(), 
-            point.z() + center.z());
+    //    sphere_mesh.point(v) = Point(
+    //        point.x() + center.x(), 
+    //        point.y() + center.y(), 
+    //        point.z() + center.z());
 
-        //py::print("Point:", point.x(), " ", point.y(), " ", point.z());
-        //py::print("New Point:", point.x() + center.x(), " ",
-        //    point.y() + center.y(), " ",
-        //    point.z() + center.z());
+    //    //py::print("Point:", point.x(), " ", point.y(), " ", point.z());
+    //    //py::print("New Point:", point.x() + center.x(), " ",
+    //    //    point.y() + center.y(), " ",
+    //    //    point.z() + center.z());
 
-        //auto x = center.x();
-        //for (int i = 0; i < center.x(); i++) {
-        //    //sphere_mesh.point(v) = sphere_mesh.point(v).transform(translation);
-    }
+    //    //auto x = center.x();
+    //    //for (int i = 0; i < center.x(); i++) {
+    //    //    //sphere_mesh.point(v) = sphere_mesh.point(v).transform(translation);
+    //}
 
 
     //what if move 1 unit at a time?
 
 
-    //CGAL::Surface_mesh_deformation<Point3Mesh> deformation(sphere_mesh);
+    CGAL::Surface_mesh_deformation<Point3Mesh> deformation(sphere_mesh);
 
     //py::print("created deformation.");
 
     //below is slow,then crashes
     //auto x = sphere_mesh.vertices();
     //
-    //deformation.translate(sphere_mesh.vertices_begin(), sphere_mesh.vertices_end(), center);
-    //deformation.deform();
+    deformation.translate(sphere_mesh.vertices_begin(), sphere_mesh.vertices_end(), center);
+    deformation.deform();
 
     py::print("finished moving sphere.");//never gets here... 
 
@@ -97,8 +97,8 @@ std::shared_ptr<Point3Mesh> meshutils::primitives::circle(const Point center, co
     //add edge verts
     for (int i = 0; i < num_vertices; i++) {
         double angle = i * angleStep;
-        double x = radius * cos(angle) + center[0];
-        double y = radius * sin(angle) + center[1];
+        CGAL::MP_Float x = radius * cos(angle) + center[0];
+        CGAL::MP_Float y = radius * sin(angle) + center[1];
         circle.add_vertex(Point(x, y, center[2]));
     }
 
@@ -138,16 +138,27 @@ std::shared_ptr<Point3Mesh> meshutils::primitives::cylinder(const Segment segmen
     typedef Kernel::Direction_3 Direction;
 
     //Construct a cylinder that starts at segemnt.source() and extends to to length of the segment in z. 
-    Point source = segment.source();//TODO this should be a unique pointer
+    Point source = segment.source();
+    Point target = segment.target();
+
+    double height = CGAL::to_double(CGAL::approximate_sqrt(segment.squared_length()));
     auto cylinder = meshutils::primitives::cylinder(
         source,
         radius,
-        sqrt(segment.squared_length()),
+        height,
         num_vertices);
 
-    Eigen::Vector3d initial(source[0],source[1],source[2] + sqrt(segment.squared_length()));
-    Eigen::Vector3d final(segment.to_vector()[0], segment.to_vector()[1], segment.to_vector()[2]);
-    Eigen::Quaternion<double> quaternion = Eigen::Quaternion<double>::FromTwoVectors(initial, final);
+    auto initial_x = CGAL::to_double(source.x());
+    auto initial_y = CGAL::to_double(source.y());
+    auto initial_z = CGAL::to_double(source.z() + CGAL::approximate_sqrt(segment.squared_length()));
+    
+    auto rotated_x = CGAL::to_double(target.x());
+    auto rotated_y = CGAL::to_double(target.y());
+    auto rotated_z = CGAL::to_double(target.z());
+
+    Eigen::Vector3d initial(initial_x, initial_y, initial_z);
+    Eigen::Vector3d rotated(rotated_x, rotated_y, rotated_z);
+    Eigen::Quaternion<double> quaternion = Eigen::Quaternion<double>::FromTwoVectors(initial, rotated);
     auto rotationMatrix = quaternion.toRotationMatrix();
 
     Affine rotation({
