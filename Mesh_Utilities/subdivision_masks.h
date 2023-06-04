@@ -19,11 +19,24 @@ public:
     Point center;
     VertexPointMap vpm;
     double squared_radius;
+    int decimalPlaces;
 
     //I think I can use CGAL::Origin as the center
-    Spherical_Loop_mask(Point3Mesh& mesh, const Point center, const double radius) :mesh(mesh), center(center), squared_radius(radius*radius), vpm(CGAL::get(boost::vertex_point_t::vertex_point, mesh)) {};
+    Spherical_Loop_mask(
+        Point3Mesh& mesh, 
+        const Point& center, 
+        const double radius,
+        const int decimalPlaces = 2) :
+        mesh(mesh), 
+        center(center), 
+        squared_radius(radius*radius), 
+        decimalPlaces(decimalPlaces),
+        vpm(CGAL::get(boost::vertex_point_t::vertex_point, mesh)) {};
+
+    
 
     void edge_node(halfedge_descriptor halfedge, Point& pt) {
+        /*std::round(f * n) / n;*/
         Point_ref p1 = boost::get(vpm, CGAL::target(halfedge, mesh));
         Point_ref p2 = boost::get(vpm, CGAL::target(opposite(halfedge, mesh), mesh));
         Point_ref f1 = boost::get(vpm, CGAL::target(next(halfedge, mesh), mesh));
@@ -34,10 +47,10 @@ public:
             (3 * (p1[2] + p2[2]) + f1[2] + f2[2]) * 0.125);
 
         //project points to sphere
-        double scalar = sqrt(abs(squared_radius / CGAL::to_double(CGAL::squared_distance(center, pt))));
-        pt = Point(((pt[0]-center[0]) * scalar) + center[0], 
-            ((pt[1]-center[1]) * scalar) + center[1], 
-            ((pt[2] - center[2]) * scalar) + center[2]);
+        double scalar = roundToDecimal(sqrt(abs(squared_radius / CGAL::squared_distance(center, pt))));
+        pt = Point(roundToDecimal(((pt[0]-center[0]) * scalar) + center[0]), 
+            roundToDecimal(((pt[1]-center[1]) * scalar) + center[1]), 
+            roundToDecimal(((pt[2] - center[2]) * scalar) + center[2]));
     }
 
     void vertex_node(vertex_descriptor vertex, Point& pt) {
@@ -53,24 +66,20 @@ public:
             R[0] += p[0];         R[1] += p[1];         R[2] += p[2];
         }
         if (n == 6) {
-            pt = Point((10 * S[0] + R[0]) * 0.0625, (10 * S[1] + R[1]) * 0.0625, (10 * S[2] + R[2]) * .0625);
+            pt = Point((10 * S[0] + R[0]) / 16, (10 * S[1] + R[1]) / 16, (10 * S[2] + R[2]) / 16);
         }
         else {
             const FT Cn = (FT)(5.0 / 8.0 - CGAL::square(3 + 2 * std::cos(2 * CGAL_PI / (double)n)) / 64.0);
-
-            const FT Sw = CGAL::approximate_division((double)n * (1 - Cn),  Cn);
-            const FT W = CGAL::approximate_division((double)n, Cn);
-            //pt = Point(CGAL::approximate_division(Sw * S[0] + R[0]) / W, (Sw * S[1] + R[1]) / W, (Sw * S[2] + R[2]) * 0.015625);
-            pt =Point(CGAL::approximate_division(Sw * S[0] + R[0], W),
-                CGAL::approximate_division(Sw * S[1] + R[1], W),
-                (Sw * S[2] + R[2]) * 0.015625);
+            const FT Sw = (double)n * (1 - Cn) / Cn;
+            const FT W = (double)n / Cn;
+            pt = Point((Sw * S[0] + R[0]) / W, (Sw * S[1] + R[1]) / W, (Sw * S[2] + R[2]) / W);
         }
 
         //project points to sphere
-        CGAL::MP_Float scalar = CGAL::approximate_sqrt(abs(CGAL::approximate_division(squared_radius, CGAL::squared_distance(center, pt))));
-        pt = Point(((pt[0] - center[0]) * scalar) + center[0],
-            ((pt[1] - center[1]) * scalar) + center[1],
-            ((pt[2] - center[2]) * scalar) + center[2]);
+        double scalar = roundToDecimal(sqrt(abs(squared_radius / CGAL::squared_distance(center, pt))));
+        pt = Point(roundToDecimal(((pt[0] - center[0]) * scalar) + center[0]),
+            roundToDecimal(((pt[1] - center[1]) * scalar) + center[1]),
+            roundToDecimal(((pt[2] - center[2]) * scalar) + center[2]));
     }
 
     void border_node(halfedge_descriptor hd, Point& ept, Point& vpt) {
@@ -84,10 +93,17 @@ public:
         Point_ref vp0 = get(vpm, CGAL::target(*vcir, mesh));
         --vcir;
         Point_ref vp_1 = get(vpm, CGAL::target(opposite(*vcir, mesh), mesh));
-        vpt = Point((vp_1[0] + 6 * vp0[0] + vp1[0]) * .125,
-            (vp_1[1] + 6 * vp0[1] + vp1[1]) * .125,
-            (vp_1[2] + 6 * vp0[2] + vp1[2]) * .125);
+        vpt = Point(roundToDecimal((vp_1[0] + 6 * vp0[0] + vp1[0]) * .125),
+            roundToDecimal((vp_1[1] + 6 * vp0[1] + vp1[1]) * .125),
+            roundToDecimal((vp_1[2] + 6 * vp0[2] + vp1[2]) * .125));
     }
+
+    //private:
+        long double roundToDecimal(long double value) 
+        {
+            const double multiplier = std::pow(10.0, decimalPlaces);
+            return std::ceil(value * multiplier) / multiplier;
+        };
 };
 
 

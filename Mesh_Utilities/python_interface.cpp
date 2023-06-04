@@ -87,14 +87,14 @@ PYBIND11_MODULE(meshutils, m) {
 
     auto submodulePrimitives = m.def_submodule("primitives");
 
-    submodulePrimitives.def("icosphere", [](int radius, int subdivisions, py::array_t<double> center_point) {
-        double* pointData = (double*)center_point.request().ptr;
-        return SurfaceMesh(meshutils::primitives::icosphere(radius, subdivisions, Point(pointData[0], pointData[1], pointData[3])));
+    submodulePrimitives.def("icosphere", [](int radius, int subdivisions, py::array_t<long double> center_point) {
+        long double* pointData = (long double*)center_point.request().ptr;
+        return SurfaceMesh(meshutils::primitives::icosphere(radius, subdivisions, Point(pointData[0], pointData[1], pointData[2])));
         },
         "Returns a sphere constructed similarly to a Blender icosphere. It is constructed by first subdividing an icosahedron, then projecting the vertices onto a sphere of the correct radius.",
         py::arg("radius") = 5,
         py::arg("subdivisions") = int(3),
-        py::arg("center_point") = py::array_t<double>(3,std::vector<double>{4,5,6}.data()));
+        py::arg("center_point") = py::array_t<long double>(3,std::vector<long double>{0,0,0}.data()));
 }
 
 #endif

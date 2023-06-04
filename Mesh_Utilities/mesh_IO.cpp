@@ -5,6 +5,7 @@
 
 #include <filesystem>
 #include <CGAL/boost/graph/named_params_helper.h>
+#include <CGAL/Named_function_parameters.h>
 #include <CGAL/Polygon_mesh_processing/IO/polygon_mesh_io.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -64,7 +65,10 @@ bool meshutils::IO::write(std::shared_ptr<Point3Mesh> mesh, const std::string& f
     }
 
     //write
-    return CGAL::IO::write_polygon_mesh(filepath, *mesh);
+    return CGAL::IO::write_polygon_mesh(
+        filepath, 
+        *mesh, 
+        CGAL::parameters::stream_precision(12));
 }
 
 SurfaceMesh meshutils::IO::surfaceMeshFromMeshpartyMesh(const py::object& meshparty_mesh)

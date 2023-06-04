@@ -15,7 +15,7 @@ namespace meshutils {
 		std::shared_ptr<Point3Mesh> cylinder(const Point center, const double radius, const double height, const int num_vertices);
 		std::shared_ptr<Point3Mesh> cylinder(const Segment segment, const double radius, const int num_vertices);
 		//need an overload where it uses two points for hte segment
-		std::shared_ptr<Point3Mesh> cylinder(const Point source, const Point target, const double radius, const int num_vertices);
+		//std::shared_ptr<Point3Mesh> cylinder(const Point source, const Point target, const double radius, const int num_vertices);
 	}
 
 	namespace subdivision {
